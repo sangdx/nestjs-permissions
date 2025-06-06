@@ -5,7 +5,7 @@
 ### 1. Install the Package
 
 ```bash
-npm install @nestjs/permissions
+npm install @brandazm/dynamic-permissions
 ```
 
 ### 2. Initialize Configuration
@@ -19,7 +19,7 @@ This will create a basic configuration in your project's `config` directory.
 ### 3. Import the Module
 
 ```typescript
-import { PermissionsModule } from '@nestjs/permissions';
+import { PermissionsModule } from '@brandazm/dynamic-permissions';
 
 @Module({
   imports: [
@@ -150,7 +150,7 @@ export class AddAuditFields1234567890 implements MigrationInterface {
 ### Route Protection
 
 ```typescript
-import { RequirePermission } from '@nestjs/permissions';
+import { RequirePermission } from '@brandazm/dynamic-permissions';
 
 @Controller('users')
 export class UserController {
@@ -254,7 +254,7 @@ module.exports = {
 ### Custom Cache Implementation
 
 ```typescript
-import { CacheService } from '@nestjs/permissions';
+import { CacheService } from '@brandazm/dynamic-permissions';
 
 @Injectable()
 export class CustomCacheService extends CacheService {
@@ -277,8 +277,8 @@ export class CustomCacheService extends CacheService {
 ### Basic Security Setup
 
 ```typescript
-import { PermissionsModule } from '@nestjs/permissions';
-import { SecurityConfig } from '@nestjs/permissions/interfaces';
+import { PermissionsModule } from '@brandazm/dynamic-permissions';
+import { SecurityConfig } from '@brandazm/dynamic-permissions/interfaces';
 
 const securityConfig: SecurityConfig = {
   rateLimit: {
@@ -373,7 +373,7 @@ export const productionSecurityConfig: SecurityConfig = {
 
 ```typescript
 // config/security.config.ts
-import { SecurityConfig } from '@nestjs/permissions/interfaces';
+import { SecurityConfig } from '@brandazm/dynamic-permissions/interfaces';
 
 const environments: Record<string, Partial<SecurityConfig>> = {
   development: {
@@ -423,7 +423,7 @@ export const getSecurityConfig = (env: string): SecurityConfig => {
 
 ```typescript
 // src/security/custom-security.config.ts
-import { SecurityConfig } from '@nestjs/permissions/interfaces';
+import { SecurityConfig } from '@brandazm/dynamic-permissions/interfaces';
 
 export const customSecurityConfig: SecurityConfig = {
   rateLimit: {
@@ -694,7 +694,7 @@ module.exports = config;
 ### Programmatic Usage
 
 ```typescript
-import { SecurityConfigPublisherService } from '@nestjs/permissions';
+import { SecurityConfigPublisherService } from '@brandazm/dynamic-permissions';
 
 @Injectable()
 class SecurityConfigManager {

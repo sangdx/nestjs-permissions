@@ -24,7 +24,7 @@ module.exports = {
 ```typescript
 // src/cache/redis-cache.service.ts
 import { Injectable } from '@nestjs/common';
-import { CacheService } from '@nestjs/permissions';
+import { CacheService } from '@brandazm/dynamic-permissions';
 import Redis from 'ioredis';
 
 @Injectable()

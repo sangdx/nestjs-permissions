@@ -190,7 +190,7 @@ export class SecurityConfigPublisherService {
 
   private generateConfigFile(config: Partial<SecurityConfig>): string {
     return `// @ts-check
-import { SecurityConfig } from '@nestjs/permissions';
+import { SecurityConfig } from '@brandazm/dynamic-permissions';
 
 /** @type {import('./security.config').SecurityConfig} */
 const config = ${JSON.stringify(config, null, 2)};
@@ -200,7 +200,7 @@ export default config;
   }
 
   private generateTypesFile(): string {
-    return `import { SecurityConfig } from '@nestjs/permissions';
+    return `import { SecurityConfig } from '@brandazm/dynamic-permissions';
 
 declare const config: SecurityConfig;
 export = config;

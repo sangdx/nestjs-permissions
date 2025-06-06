@@ -58,7 +58,7 @@ npx nestjs-permissions init -t advanced
 ### 2. Module Setup
 
 ```typescript
-import { PermissionsModule } from '@nestjs/permissions';
+import { PermissionsModule } from '@brandazm/dynamic-permissions';
 
 @Module({
   imports: [
@@ -71,7 +71,7 @@ export class AppModule {}
 ### 3. Apply Permissions
 
 ```typescript
-import { RequirePermission } from '@nestjs/permissions';
+import { RequirePermission } from '@brandazm/dynamic-permissions';
 
 @Controller('users')
 export class UserController {

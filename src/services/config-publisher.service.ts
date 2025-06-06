@@ -145,7 +145,7 @@ export class ConfigPublisherService {
 
   private generateConfigFile(config: Partial<PermissionConfig>): string {
     return `// @ts-check
-import { PermissionConfig } from '@nestjs/permissions';
+import { PermissionConfig } from '@brandazm/dynamic-permissions';
 
 /** @type {import('./permissions.config').PermissionConfig} */
 const config = ${JSON.stringify(config, null, 2)};
@@ -155,7 +155,7 @@ export default config;
   }
 
   private generateTypesFile(): string {
-    return `import { PermissionConfig } from '@nestjs/permissions';
+    return `import { PermissionConfig } from '@brandazm/dynamic-permissions';
 
 declare const config: PermissionConfig;
 export = config;
