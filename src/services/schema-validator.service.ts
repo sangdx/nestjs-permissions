@@ -183,7 +183,7 @@ export class SchemaValidatorService {
     try {
       // First try to read the file content
       const fileContent = fs.readFileSync(configPath, 'utf8');
-      
+
       // Try to parse as JSON first
       try {
         return JSON.parse(fileContent);
