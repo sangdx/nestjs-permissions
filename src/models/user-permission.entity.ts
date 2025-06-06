@@ -7,19 +7,19 @@ export class UserPermissionEntity implements UserPermission {
   id: number;
 
   @Column({ name: 'user_id' })
-  userId: string;
+  user_id: string;
 
   @Column({ name: 'permission_id' })
-  permissionId: number;
+  permission_id: number;
 
   @Column({ name: 'granted_at' })
-  grantedAt: Date;
+  granted_at: Date;
 
   @Column({ name: 'expires_at', nullable: true })
-  expiresAt?: Date;
+  expires_at?: Date;
 
   @Column({ name: 'is_active' })
-  isActive: boolean;
+  is_active: boolean;
 
   // Dynamic columns will be added at runtime based on configuration
   [key: string]: any;
