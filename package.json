@@ -1,0 +1,77 @@
+{
+  "name": "@nestjs/permissions",
+  "version": "0.5.0",
+  "description": "Dynamic permissions management for NestJS applications",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "nestjs-permissions": "./dist/bin/nestjs-permissions-cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "lint": "eslint \"src/**/*.ts\"",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm test && npm run lint",
+    "preversion": "npm run lint",
+    "version": "npm run format && git add -A src",
+    "postversion": "git push && git push --tags"
+  },
+  "keywords": [
+    "nestjs",
+    "permissions",
+    "authorization",
+    "security",
+    "dynamic",
+    "roles",
+    "access control"
+  ],
+  "author": "NestJS Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sangdx/nestjs-permissions.git"
+  },
+  "bugs": {
+    "url": "https://github.com/sangdx/nestjs-permissions/issues"
+  },
+  "homepage": "https://github.com/sangdx/nestjs-permissions#readme",
+  "dependencies": {
+    "@nestjs/common": "^8.0.0",
+    "@nestjs/core": "^8.0.0",
+    "@nestjs/typeorm": "^8.0.0",
+    "commander": "^9.0.0",
+    "express-rate-limit": "^7.5.0",
+    "helmet": "^8.1.0",
+    "reflect-metadata": "^0.1.13",
+    "rxjs": "^7.0.0",
+    "typeorm": "^0.2.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.2",
+    "@types/helmet": "^0.0.48",
+    "@types/jest": "^27.0.0",
+    "@types/node": "^16.0.0",
+    "@typescript-eslint/eslint-plugin": "^5.0.0",
+    "@typescript-eslint/parser": "^5.0.0",
+    "eslint": "^8.0.0",
+    "eslint-config-prettier": "^8.0.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "jest": "^27.0.0",
+    "prettier": "^2.0.0",
+    "ts-jest": "^27.0.0",
+    "typescript": "^4.0.0"
+  },
+  "peerDependencies": {
+    "@nestjs/common": "^8.0.0",
+    "@nestjs/core": "^8.0.0",
+    "@nestjs/typeorm": "^8.0.0",
+    "typeorm": "^0.2.0"
+  },
+  "files": [
+    "dist/**/*",
+    "README.md",
+    "LICENSE"
+  ]
+}
