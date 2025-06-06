@@ -1,4 +1,5 @@
 import { PermissionConfig } from '../interfaces/config.interface';
+import { defaultSecurityConfig } from './default-security.config';
 
 export const defaultConfig: PermissionConfig = {
   database: {
@@ -47,9 +48,5 @@ export const defaultConfig: PermissionConfig = {
     publicRoutes: ['/auth/login', '/auth/register'],
     permissionStrategy: 'whitelist',
   },
-  security: {
-    enableCaching: true,
-    cacheTimeout: 3600, // 1 hour
-    enableAuditLog: true,
-  },
+  security: defaultSecurityConfig,
 };

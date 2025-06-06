@@ -190,6 +190,9 @@ export class SecurityConfigPublisherService {
         validateContentType: true,
         ...config.requestValidation,
       },
+      enableCaching: config.enableCaching ?? true,
+      cacheTimeout: config.cacheTimeout ?? 3600,
+      enableAuditLog: config.enableAuditLog ?? true,
     };
 
     return `import { SecurityConfig } from '@brandazm/dynamic-permissions';\n\nexport const securityConfig: SecurityConfig = ${JSON.stringify(

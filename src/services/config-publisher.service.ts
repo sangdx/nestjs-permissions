@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PermissionConfig } from '../interfaces/config.interface';
 import { defaultConfig } from '../config/default-config';
+import { defaultSecurityConfig } from '../config/default-security.config';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -15,34 +16,89 @@ export class ConfigPublisherService {
   private readonly templates: Record<string, ConfigTemplate> = {
     basic: {
       name: 'Basic Configuration',
-      description: 'Simple permission configuration with minimal setup',
+      description: 'Basic configuration with essential features',
       config: defaultConfig,
     },
-    advanced: {
-      name: 'Advanced Configuration',
-      description: 'Advanced configuration with role hierarchy and caching',
+    strict: {
+      name: 'Strict Configuration',
+      description: 'Enhanced configuration with stricter settings',
       config: {
         ...defaultConfig,
         security: {
+          ...defaultSecurityConfig,
+          rateLimit: {
+            enabled: true,
+            windowMs: 15 * 60 * 1000,
+            max: 50, // Stricter rate limit
+          },
+          cors: {
+            enabled: true,
+            allowedOrigins: [], // Must be explicitly set
+            allowedMethods: ['GET', 'POST'], // Limited methods
+            allowedHeaders: ['Content-Type', 'Authorization'],
+            exposedHeaders: [],
+            credentials: true,
+          },
+          helmet: {
+            ...defaultSecurityConfig.helmet,
+            contentSecurityPolicy: true,
+            crossOriginEmbedderPolicy: true,
+            hsts: true,
+          },
+          requestValidation: {
+            maxBodySize: 5 * 1024 * 1024, // 5MB limit
+            requireJsonContent: true,
+            validateContentType: true,
+          },
           enableCaching: true,
-          cacheTimeout: 3600,
+          cacheTimeout: 1800, // 30 minutes
           enableAuditLog: true,
         },
       },
     },
     enterprise: {
       name: 'Enterprise Configuration',
-      description: 'Full-featured configuration with all security features enabled',
+      description: 'Full-featured configuration for enterprise applications',
       config: {
         ...defaultConfig,
         security: {
+          ...defaultSecurityConfig,
+          rateLimit: {
+            enabled: true,
+            windowMs: 5 * 60 * 1000, // 5 minutes
+            max: 100,
+          },
+          cors: {
+            enabled: true,
+            allowedOrigins: [],
+            allowedMethods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+            allowedHeaders: ['Content-Type', 'Authorization', 'X-Custom-Header'],
+            exposedHeaders: ['X-Total-Count', 'X-Rate-Limit'],
+            credentials: true,
+          },
+          helmet: {
+            enabled: true,
+            contentSecurityPolicy: true,
+            crossOriginEmbedderPolicy: true,
+            crossOriginOpenerPolicy: true,
+            crossOriginResourcePolicy: true,
+            dnsPrefetchControl: true,
+            frameguard: true,
+            hidePoweredBy: true,
+            hsts: true,
+            ieNoOpen: true,
+            noSniff: true,
+            referrerPolicy: true,
+            xssFilter: true,
+          },
+          requestValidation: {
+            maxBodySize: 10 * 1024 * 1024,
+            requireJsonContent: true,
+            validateContentType: true,
+          },
           enableCaching: true,
-          cacheTimeout: 1800,
+          cacheTimeout: 7200, // 2 hours
           enableAuditLog: true,
-        },
-        permissions: {
-          ...defaultConfig.permissions,
-          permissionStrategy: 'whitelist',
         },
       },
     },
