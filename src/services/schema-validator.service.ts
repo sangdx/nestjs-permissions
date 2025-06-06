@@ -181,11 +181,36 @@ export class SchemaValidatorService {
 
   private async loadConfig(configPath: string): Promise<PermissionConfig | null> {
     try {
-      const config = require(configPath);
-      return config.default || config;
+      // First try to read the file content
+      const fileContent = fs.readFileSync(configPath, 'utf8');
+      
+      // Try to parse as JSON first
+      try {
+        return JSON.parse(fileContent);
+      } catch {
+        // If not JSON, evaluate as JavaScript
+        const configModule = await this.evaluateConfig(fileContent);
+        return configModule.default || configModule;
+      }
     } catch (error) {
       console.error('Error loading configuration file:', error);
       return null;
+    }
+  }
+
+  private async evaluateConfig(content: string): Promise<any> {
+    try {
+      // Remove any import/export statements
+      const cleanContent = content
+        .replace(/import\s+.*?from\s+['"].*?['"]/g, '')
+        .replace(/export\s+default\s+/, 'return ');
+
+      // Create a function from the content
+      const fn = new Function(cleanContent);
+      return fn();
+    } catch (error) {
+      console.error('Error evaluating configuration:', error);
+      throw error;
     }
   }
 
