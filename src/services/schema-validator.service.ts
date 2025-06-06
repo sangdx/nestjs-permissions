@@ -131,7 +131,7 @@ export class SchemaValidatorService {
   async validateConfig(projectPath: string): Promise<boolean> {
     try {
       const configPath = path.join(projectPath, 'config', 'permissions.config.ts');
-      
+
       // Check if config file exists
       if (!fs.existsSync(configPath)) {
         console.error('Configuration file not found:', configPath);
@@ -191,14 +191,14 @@ export class SchemaValidatorService {
 
   private validateTopLevelConfig(config: any): boolean {
     const requiredProperties = ['database', 'permissions', 'security'];
-    
+
     for (const prop of requiredProperties) {
       if (!config[prop]) {
         console.error(`Missing required top-level property: ${prop}`);
         return false;
       }
     }
-    
+
     return true;
   }
 
@@ -231,7 +231,7 @@ export class SchemaValidatorService {
 
   private validatePermissionsConfig(permissions: any): boolean {
     const requiredProperties = ['defaultRole', 'adminRole', 'permissionStrategy'];
-    
+
     for (const prop of requiredProperties) {
       if (!permissions[prop]) {
         console.error(`Missing required permissions property: ${prop}`);
@@ -239,7 +239,10 @@ export class SchemaValidatorService {
       }
     }
 
-    if (permissions.permissionStrategy !== 'whitelist' && permissions.permissionStrategy !== 'blacklist') {
+    if (
+      permissions.permissionStrategy !== 'whitelist' &&
+      permissions.permissionStrategy !== 'blacklist'
+    ) {
       console.error('Invalid permission strategy. Must be either "whitelist" or "blacklist"');
       return false;
     }
@@ -254,7 +257,7 @@ export class SchemaValidatorService {
 
   private validateSecurityConfig(security: any): boolean {
     const requiredProperties = ['enableCaching', 'cacheTimeout', 'enableAuditLog'];
-    
+
     for (const prop of requiredProperties) {
       if (security[prop] === undefined) {
         console.error(`Missing required security property: ${prop}`);
