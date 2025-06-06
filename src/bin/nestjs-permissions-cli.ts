@@ -5,6 +5,8 @@ import { SecurityConfigPublisherService } from '../services/security-config-publ
 import { ConfigPublisherService } from '../services/config-publisher.service';
 import { MigrationGeneratorService } from '../services/migration-generator.service';
 import { SchemaValidatorService } from '../services/schema-validator.service';
+import path from 'path';
+import fs from 'fs';
 
 const program = new Command();
 
@@ -36,9 +38,38 @@ program
   .option('-n, --name <name>', 'Migration name')
   .option('-d, --dir <directory>', 'Migration directory', 'src/migrations')
   .action(async (options) => {
-    const migrationGenerator = new MigrationGeneratorService();
-    await migrationGenerator.generateMigration(options.name, options.dir);
-    console.log('Migration generated successfully');
+    try {
+      // First ensure config directory exists
+      const configDir = path.join(process.cwd(), 'config');
+      if (!fs.existsSync(configDir)) {
+        console.error('Config directory not found. Please run `init` command first.');
+        process.exit(1);
+      }
+
+      // Validate config file exists
+      const configPath = path.join(configDir, 'permissions.config.ts');
+      if (!fs.existsSync(configPath)) {
+        console.error('permissions.config.ts not found. Please run `init` command first.');
+        process.exit(1);
+      }
+
+      // Validate config schema
+      const validator = new SchemaValidatorService();
+      const isValid = await validator.validateConfig(process.cwd());
+      if (!isValid) {
+        console.error(
+          'Configuration validation failed. Please check your permissions.config.ts file.',
+        );
+        process.exit(1);
+      }
+
+      const migrationGenerator = new MigrationGeneratorService();
+      await migrationGenerator.generateMigration(options.name, options.dir);
+      console.log('Migration generated successfully');
+    } catch (error) {
+      console.error('Failed to generate migration:', error.message);
+      process.exit(1);
+    }
   });
 
 program

@@ -195,22 +195,13 @@ export class ConfigPublisherService {
   }
 
   private generateConfigFile(config: Partial<PermissionConfig>): string {
-    return `// @ts-check
-import { PermissionConfig } from '@brandazm/dynamic-permissions';
+    return `
+      import { PermissionConfig } from '@brandazm/dynamic-permissions';
 
-/** @type {import('./permissions.config').PermissionConfig} */
-const config = ${JSON.stringify(config, null, 2)};
+      const config: PermissionConfig = ${JSON.stringify(config, null, 2)};
 
-export default config;
-`;
-  }
-
-  private generateTypesFile(): string {
-    return `import { PermissionConfig } from '@brandazm/dynamic-permissions';
-
-declare const config: PermissionConfig;
-export = config;
-`;
+      export default config;
+      `;
   }
 
   private writeConfigToFile(config: PermissionConfig, filePath: string): void {
