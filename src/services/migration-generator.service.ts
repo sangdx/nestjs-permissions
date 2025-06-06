@@ -39,7 +39,7 @@ export class MigrationGeneratorService {
       // Generate filename with timestamp
       const timestamp = new Date().getTime();
       const className = this.generateClassName(name);
-      const filename = `${timestamp}-${name}.ts`;
+      const filename = `${timestamp}-${className}.ts`;
       const filePath = path.join(directory, filename);
 
       // Write migration file
