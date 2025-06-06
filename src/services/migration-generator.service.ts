@@ -20,7 +20,7 @@ export class MigrationGeneratorService {
     fromVersion: string,
     toVersion: string,
     name: string,
-    directory: string = 'src/migrations'
+    directory: string = 'src/migrations',
   ): Promise<void> {
     // Implementation here
     // This is a placeholder implementation
