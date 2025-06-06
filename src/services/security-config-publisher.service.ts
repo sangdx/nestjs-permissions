@@ -112,47 +112,108 @@ export class SecurityConfigPublisherService {
     const finalConfig = customizations ? this.mergeConfigs(baseConfig, customizations) : baseConfig;
 
     // Write configuration file
-    const configPath = path.join(configDir, 'security.config.js');
+    const configPath = path.join(configDir, 'security.config.ts');
     const configContent = this.generateConfigFile(finalConfig);
     fs.writeFileSync(configPath, configContent, 'utf8');
-
-    // Write TypeScript types
-    const typesPath = path.join(configDir, 'security.config.d.ts');
-    const typesContent = this.generateTypesFile();
-    fs.writeFileSync(typesPath, typesContent, 'utf8');
   }
 
   async updateProjectSecurityConfig(
     projectPath: string,
     updates: Partial<SecurityConfig>,
   ): Promise<void> {
-    const configPath = path.join(projectPath, 'config', 'security.config.js');
+    const configPath = path.join(projectPath, 'config', 'security.config.ts');
 
     // Check if config exists
     if (!fs.existsSync(configPath)) {
       throw new Error('Security configuration file not found');
     }
 
-    // Load existing config
-    const currentConfig = await import(configPath);
+    try {
+      // Read existing config
+      const configContent = fs.readFileSync(configPath, 'utf8');
+      
+      // Parse the existing config
+      const currentConfig = this.parseConfigFile(configContent);
 
-    // Merge updates
-    const updatedConfig = this.mergeConfigs(currentConfig, updates);
+      // Merge updates
+      const updatedConfig = this.mergeConfigs(currentConfig, updates);
 
-    // Write updated config
-    const configContent = this.generateConfigFile(updatedConfig);
-    fs.writeFileSync(configPath, configContent, 'utf8');
+      // Write updated config
+      const newConfigContent = this.generateConfigFile(updatedConfig);
+      fs.writeFileSync(configPath, newConfigContent, 'utf8');
+    } catch (error) {
+      throw new Error(`Failed to update security config: ${error.message}`);
+    }
   }
 
   getAvailableTemplates(): SecurityTemplate[] {
     return Object.values(this.templates);
   }
 
-  private mergeConfigs(
-    base: Partial<SecurityConfig>,
-    updates: Partial<SecurityConfig>,
-  ): SecurityConfig {
+  private generateConfigFile(config: Partial<SecurityConfig>): string {
+    // Ensure the config has all required properties with default values
+    const fullConfig: SecurityConfig = {
+      rateLimit: {
+        enabled: true,
+        windowMs: 15 * 60 * 1000,
+        max: 100,
+        ...config.rateLimit,
+      },
+      cors: {
+        enabled: true,
+        allowedOrigins: [],
+        allowedMethods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+        allowedHeaders: ['Content-Type', 'Authorization'],
+        exposedHeaders: ['X-Total-Count'],
+        credentials: true,
+        ...config.cors,
+      },
+      helmet: {
+        enabled: true,
+        contentSecurityPolicy: true,
+        crossOriginEmbedderPolicy: true,
+        crossOriginOpenerPolicy: true,
+        crossOriginResourcePolicy: true,
+        dnsPrefetchControl: true,
+        frameguard: true,
+        hidePoweredBy: true,
+        hsts: true,
+        ieNoOpen: true,
+        noSniff: true,
+        referrerPolicy: true,
+        xssFilter: true,
+        ...config.helmet,
+      },
+      requestValidation: {
+        maxBodySize: 10 * 1024 * 1024,
+        requireJsonContent: true,
+        validateContentType: true,
+        ...config.requestValidation,
+      },
+    };
+
+    return `import { SecurityConfig } from '@brandazm/dynamic-permissions';\n\nexport const securityConfig: SecurityConfig = ${JSON.stringify(fullConfig, null, 2)};\n`;
+  }
+
+  private parseConfigFile(content: string): SecurityConfig {
+    try {
+      // Remove imports and exports
+      const configString = content
+        .replace(/import.*?;/g, '')
+        .replace(/export.*?const.*?=/, '')
+        .replace(/;$/, '')
+        .trim();
+
+      return JSON.parse(configString);
+    } catch (error) {
+      throw new Error('Failed to parse security config file');
+    }
+  }
+
+  private mergeConfigs(base: Partial<SecurityConfig>, updates: Partial<SecurityConfig>): SecurityConfig {
     return {
+      ...base,
+      ...updates,
       rateLimit: {
         ...base.rateLimit,
         ...updates.rateLimit,
@@ -160,22 +221,6 @@ export class SecurityConfigPublisherService {
       cors: {
         ...base.cors,
         ...updates.cors,
-        allowedOrigins: [
-          ...(base.cors?.allowedOrigins || []),
-          ...(updates.cors?.allowedOrigins || []),
-        ],
-        allowedMethods: [
-          ...(base.cors?.allowedMethods || []),
-          ...(updates.cors?.allowedMethods || []),
-        ],
-        allowedHeaders: [
-          ...(base.cors?.allowedHeaders || []),
-          ...(updates.cors?.allowedHeaders || []),
-        ],
-        exposedHeaders: [
-          ...(base.cors?.exposedHeaders || []),
-          ...(updates.cors?.exposedHeaders || []),
-        ],
       },
       helmet: {
         ...base.helmet,
@@ -186,32 +231,5 @@ export class SecurityConfigPublisherService {
         ...updates.requestValidation,
       },
     } as SecurityConfig;
-  }
-
-  private generateConfigFile(config: Partial<SecurityConfig>): string {
-    return `// @ts-check
-import { SecurityConfig } from '@brandazm/dynamic-permissions';
-
-/** @type {import('./security.config').SecurityConfig} */
-const config = ${JSON.stringify(config, null, 2)};
-
-export default config;
-`;
-  }
-
-  private generateTypesFile(): string {
-    return `import { SecurityConfig } from '@brandazm/dynamic-permissions';
-
-declare const config: SecurityConfig;
-export = config;
-`;
-  }
-
-  private writeConfigToFile(config: SecurityConfig, filePath: string): void {
-    const configDir = path.dirname(filePath);
-    if (!fs.existsSync(configDir)) {
-      fs.mkdirSync(configDir, { recursive: true });
-    }
-    fs.writeFileSync(filePath, JSON.stringify(config, null, 2));
   }
 }
