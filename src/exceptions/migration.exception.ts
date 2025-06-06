@@ -11,4 +11,4 @@ export class MigrationException extends HttpException {
       HttpStatus.INTERNAL_SERVER_ERROR,
     );
   }
-} 
+}

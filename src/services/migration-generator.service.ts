@@ -60,7 +60,10 @@ export class MigrationGeneratorService {
       }
       throw new Error(`Configuration file not found for version: ${version}`);
     } catch (error) {
-      throw new MigrationException('SCHEMA_MISMATCH', `Failed to load config for version ${version}: ${error.message}`);
+      throw new MigrationException(
+        'SCHEMA_MISMATCH',
+        `Failed to load config for version ${version}: ${error.message}`,
+      );
     }
   }
 
@@ -68,7 +71,7 @@ export class MigrationGeneratorService {
     // Convert name to PascalCase
     return name
       .split(/[-_]/)
-      .map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
       .join('');
   }
 
@@ -151,7 +154,7 @@ export class MigrationGeneratorService {
   private generateMigrationContent(
     oldConfig: PermissionConfig,
     newConfig: PermissionConfig,
-    name: string
+    name: string,
   ): string {
     const alterations = this.generateAlterTables(oldConfig, newConfig);
     const indexes = this.generateIndexes(newConfig);
