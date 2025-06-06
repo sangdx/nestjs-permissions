@@ -40,7 +40,7 @@ A flexible and powerful permissions management system for NestJS applications wi
 ## Installation
 
 ```bash
-npm install @nestjs/permissions
+npm i @brandazm/dynamic-permissions
 ```
 
 ## Quick Start

@@ -1,5 +1,5 @@
 {
-  "name": "@nest/dynamic-permissions",
+  "name": "@brandazm/dynamic-permissions",
   "version": "1.0.0",
   "description": "A flexible and powerful permissions management system for NestJS applications with built-in security features",
   "main": "dist/index.js",
