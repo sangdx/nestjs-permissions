@@ -34,4 +34,7 @@ export const defaultSecurityConfig: SecurityConfig = {
     requireJsonContent: true,
     validateContentType: true,
   },
+  enableCaching: true,
+  cacheTimeout: 3600, // 1 hour
+  enableAuditLog: true,
 };

@@ -32,4 +32,7 @@ export interface SecurityConfig {
     requireJsonContent: boolean;
     validateContentType: boolean;
   };
+  enableCaching: boolean;
+  cacheTimeout: number;
+  enableAuditLog: boolean;
 }
