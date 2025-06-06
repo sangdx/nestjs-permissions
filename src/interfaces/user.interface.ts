@@ -16,4 +16,4 @@ export interface UserPermissionFieldConfig {
   expiresAt?: string;
   isActive: string;
   [customField: string]: string | undefined;
-} 
+}

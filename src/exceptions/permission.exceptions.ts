@@ -8,9 +8,9 @@ export class PermissionDeniedException extends HttpException {
         errorCode: 'PERMISSION_DENIED',
         requiredPermission: permission,
         userId,
-        metadata
+        metadata,
       },
-      HttpStatus.FORBIDDEN
+      HttpStatus.FORBIDDEN,
     );
   }
 }
@@ -22,9 +22,9 @@ export class InvalidPermissionException extends HttpException {
         message: `Invalid permission: ${permission}. Reason: ${reason}`,
         errorCode: 'INVALID_PERMISSION',
         permission,
-        reason
+        reason,
       },
-      HttpStatus.BAD_REQUEST
+      HttpStatus.BAD_REQUEST,
     );
   }
 }
@@ -35,9 +35,9 @@ export class RoleNotFoundException extends HttpException {
       {
         message: `Role not found: ${role}`,
         errorCode: 'ROLE_NOT_FOUND',
-        role
+        role,
       },
-      HttpStatus.NOT_FOUND
+      HttpStatus.NOT_FOUND,
     );
   }
 }
@@ -48,9 +48,9 @@ export class ConfigurationException extends HttpException {
       {
         message: 'Configuration validation failed',
         errorCode: 'CONFIG_INVALID',
-        errors
+        errors,
       },
-      HttpStatus.INTERNAL_SERVER_ERROR
+      HttpStatus.INTERNAL_SERVER_ERROR,
     );
   }
 }
@@ -63,9 +63,9 @@ export class DatabaseException extends HttpException {
         errorCode: 'DATABASE_ERROR',
         operation,
         error: error.message,
-        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
       },
-      HttpStatus.INTERNAL_SERVER_ERROR
+      HttpStatus.INTERNAL_SERVER_ERROR,
     );
   }
 }
@@ -76,9 +76,9 @@ export class MigrationException extends HttpException {
       {
         message: `Migration error: ${details}`,
         errorCode: type,
-        details
+        details,
       },
-      HttpStatus.INTERNAL_SERVER_ERROR
+      HttpStatus.INTERNAL_SERVER_ERROR,
     );
   }
 }
@@ -90,9 +90,9 @@ export class CacheException extends HttpException {
         message: `Cache operation failed: ${operation}`,
         errorCode: 'CACHE_ERROR',
         operation,
-        error: error.message
+        error: error.message,
       },
-      HttpStatus.INTERNAL_SERVER_ERROR
+      HttpStatus.INTERNAL_SERVER_ERROR,
     );
   }
 }
@@ -104,9 +104,9 @@ export class ValidationException extends HttpException {
         message: `Validation failed for field: ${field}`,
         errorCode: 'VALIDATION_ERROR',
         field,
-        reason
+        reason,
       },
-      HttpStatus.BAD_REQUEST
+      HttpStatus.BAD_REQUEST,
     );
   }
-} 
+}

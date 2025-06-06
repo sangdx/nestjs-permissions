@@ -15,4 +15,4 @@ import { ErrorInterceptor } from '../interceptors/error.interceptor';
     },
   ],
 })
-export class ErrorHandlingModule {} 
+export class ErrorHandlingModule {}

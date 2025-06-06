@@ -7,14 +7,13 @@ export class DynamicQueryBuilder {
   static buildPermissionQuery<T extends ObjectLiteral>(
     queryBuilder: SelectQueryBuilder<T>,
     config: PermissionFieldConfig,
-    alias: string = 'permission'
+    alias = 'permission',
   ): SelectQueryBuilder<T> {
-    const { id, name, description, level, isActive, createdAt, updatedAt, ...customFields } = config;
+    const { id, name, description, level, isActive, createdAt, updatedAt, ...customFields } =
+      config;
 
     // Map standard fields
-    queryBuilder
-      .select(`${alias}.${id}`, 'id')
-      .addSelect(`${alias}.${name}`, 'name');
+    queryBuilder.select(`${alias}.${id}`, 'id').addSelect(`${alias}.${name}`, 'name');
 
     // Map optional standard fields
     if (description) {
@@ -46,7 +45,7 @@ export class DynamicQueryBuilder {
   static buildUserPermissionQuery<T extends ObjectLiteral>(
     queryBuilder: SelectQueryBuilder<T>,
     config: UserPermissionFieldConfig,
-    alias: string = 'userPermission'
+    alias = 'userPermission',
   ): SelectQueryBuilder<T> {
     const { id, userId, permissionId, grantedAt, expiresAt, isActive, ...customFields } = config;
 
@@ -78,9 +77,10 @@ export class DynamicQueryBuilder {
   static buildRouterPermissionQuery<T extends ObjectLiteral>(
     queryBuilder: SelectQueryBuilder<T>,
     config: RouterPermissionFieldConfig,
-    alias: string = 'routerPermission'
+    alias = 'routerPermission',
   ): SelectQueryBuilder<T> {
-    const { id, route, method, permissionId, isActive, createdAt, updatedAt, ...customFields } = config;
+    const { id, route, method, permissionId, isActive, createdAt, updatedAt, ...customFields } =
+      config;
 
     // Map standard fields
     queryBuilder
@@ -109,4 +109,4 @@ export class DynamicQueryBuilder {
 
     return queryBuilder;
   }
-} 
+}

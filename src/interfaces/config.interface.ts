@@ -37,4 +37,4 @@ export interface PermissionConfig {
   database: DatabaseConfig;
   permissions: PermissionsConfig;
   security: SecurityConfig;
-} 
+}

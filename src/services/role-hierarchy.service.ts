@@ -3,6 +3,8 @@ import { Permission } from '../interfaces/permission.interface';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PermissionEntity } from '../models/permission.entity';
+import { RoleHierarchyException } from '../exceptions/role-hierarchy.exception';
+import 'reflect-metadata';
 
 export interface RoleNode {
   role: string;
@@ -25,16 +27,14 @@ export class RoleHierarchyService {
 
   constructor(
     @InjectRepository(PermissionEntity)
-    private readonly permissionRepository: Repository<PermissionEntity>
+    private readonly permissionRepository: Repository<PermissionEntity>,
   ) {}
 
   async buildRoleTree(hierarchy: RoleHierarchy): Promise<RoleNode> {
     // Find root roles (those with no parents)
     const roles = Object.keys(hierarchy);
-    const childRoles = new Set(
-      roles.flatMap(role => hierarchy[role].inherits || [])
-    );
-    const rootRoles = roles.filter(role => !childRoles.has(role));
+    const childRoles = new Set(roles.flatMap((role) => hierarchy[role].inherits || []));
+    const rootRoles = roles.filter((role) => !childRoles.has(role));
 
     // Build tree starting from root roles
     this.roleTree = await this.buildRoleNode(rootRoles[0], hierarchy);
@@ -58,7 +58,7 @@ export class RoleHierarchyService {
       role,
       level,
       children,
-      permissions: new Set(permissions.map(p => String(p.id)))
+      permissions: new Set(permissions.map((p) => String(p.id))),
     };
   }
 
@@ -77,8 +77,16 @@ export class RoleHierarchyService {
     const permissionIds = new Set<string>();
     this.collectPermissions(roleNode, permissionIds);
 
-    // Fetch actual permission objects
-    return this.permissionRepository.findByIds([...permissionIds]);
+    // Fetch actual permission objects and ensure they match the Permission interface
+    const permissions = await this.permissionRepository.findByIds([...permissionIds]);
+    return permissions.map((p) => ({
+      id: p.id,
+      name: p.name,
+      description: p.description,
+      isActive: p.isActive || false,
+      createdAt: p.createdAt || new Date(),
+      updatedAt: p.updatedAt || new Date(),
+    }));
   }
 
   private findRoleNode(node: RoleNode, role: string): RoleNode | null {
@@ -98,7 +106,7 @@ export class RoleHierarchyService {
 
   private collectPermissions(node: RoleNode, collected: Set<string>): void {
     // Add this node's permissions
-    node.permissions.forEach(p => collected.add(p));
+    node.permissions.forEach((p) => collected.add(p));
 
     // Add children's permissions
     for (const child of node.children) {
@@ -108,19 +116,35 @@ export class RoleHierarchyService {
 
   private async getRolePermissions(role: string): Promise<Permission[]> {
     // Check cache
-    if (this.rolePermissions.has(role)) {
-      return this.permissionRepository.findByIds([...this.rolePermissions.get(role)!]);
+    const cachedPermissions = this.rolePermissions.get(role);
+    if (cachedPermissions) {
+      const permissions = await this.permissionRepository.findByIds([...cachedPermissions]);
+      return permissions.map((p) => ({
+        id: p.id,
+        name: p.name,
+        description: p.description,
+        isActive: p.isActive || false,
+        createdAt: p.createdAt || new Date(),
+        updatedAt: p.updatedAt || new Date(),
+      }));
     }
 
     // Fetch permissions from database
     const permissions = await this.permissionRepository.find({
-      where: { name: role, isActive: true }
+      where: { name: role, isActive: true },
     });
 
     // Cache the results
-    this.rolePermissions.set(role, new Set(permissions.map(p => String(p.id))));
+    this.rolePermissions.set(role, new Set(permissions.map((p) => String(p.id))));
 
-    return permissions;
+    return permissions.map((p) => ({
+      id: p.id,
+      name: p.name,
+      description: p.description,
+      isActive: p.isActive || false,
+      createdAt: p.createdAt || new Date(),
+      updatedAt: p.updatedAt || new Date(),
+    }));
   }
 
   validateRoleHierarchy(hierarchy: RoleHierarchy): boolean {
@@ -128,26 +152,26 @@ export class RoleHierarchyService {
     const recursionStack = new Set<string>();
 
     // Check for cycles using DFS
-    const hasCycle = (role: string): boolean => {
-      if (recursionStack.has(role)) {
+    const hasCycle = (currentRole: string): boolean => {
+      if (recursionStack.has(currentRole)) {
         return true; // Cycle detected
       }
 
-      if (visited.has(role)) {
+      if (visited.has(currentRole)) {
         return false; // Already checked this branch
       }
 
-      visited.add(role);
-      recursionStack.add(role);
+      visited.add(currentRole);
+      recursionStack.add(currentRole);
 
-      const inherits = hierarchy[role]?.inherits || [];
+      const inherits = hierarchy[currentRole]?.inherits || [];
       for (const child of inherits) {
         if (hasCycle(child)) {
           return true;
         }
       }
 
-      recursionStack.delete(role);
+      recursionStack.delete(currentRole);
       return false;
     };
 
@@ -159,14 +183,16 @@ export class RoleHierarchyService {
     }
 
     // Validate levels
-    for (const [role, config] of Object.entries(hierarchy)) {
+    for (const [parentRole, config] of Object.entries(hierarchy)) {
       const inherits = config.inherits || [];
-      for (const child of inherits) {
-        if (!hierarchy[child]) {
+      for (const childRole of inherits) {
+        if (!hierarchy[childRole]) {
           return false; // Child role doesn't exist
         }
-        if (hierarchy[child].level >= config.level) {
-          return false; // Child level should be lower than parent
+        if (hierarchy[childRole].level >= config.level) {
+          throw new RoleHierarchyException(
+            `Invalid role hierarchy: Child role '${childRole}' has higher or equal level than parent role '${parentRole}'`,
+          );
         }
       }
     }
@@ -174,8 +200,34 @@ export class RoleHierarchyService {
     return true;
   }
 
+  private validateHierarchy(hierarchy: RoleHierarchy): void {
+    // Check for circular dependencies
+    const visited = new Set<string>();
+    const recursionStack = new Set<string>();
+
+    const checkCircular = (currentRole: string): void => {
+      visited.add(currentRole);
+      recursionStack.add(currentRole);
+
+      const inherits = hierarchy[currentRole]?.inherits || [];
+      for (const inheritedRole of inherits) {
+        if (!visited.has(inheritedRole)) {
+          checkCircular(inheritedRole);
+        } else if (recursionStack.has(inheritedRole)) {
+          throw new RoleHierarchyException(
+            `Circular dependency detected in role hierarchy: ${currentRole} -> ${inheritedRole}`,
+          );
+        }
+      }
+
+      recursionStack.delete(currentRole);
+    };
+
+    Object.keys(hierarchy).forEach(checkCircular);
+  }
+
   clearCache(): void {
     this.rolePermissions.clear();
     this.roleTree = null;
   }
-} 
+}

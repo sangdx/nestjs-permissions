@@ -4,7 +4,7 @@ export const defaultSecurityConfig: SecurityConfig = {
   rateLimit: {
     enabled: true,
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100 // Limit each IP to 100 requests per windowMs
+    max: 100, // Limit each IP to 100 requests per windowMs
   },
   cors: {
     enabled: true,
@@ -12,7 +12,7 @@ export const defaultSecurityConfig: SecurityConfig = {
     allowedMethods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     exposedHeaders: ['X-Total-Count'],
-    credentials: true
+    credentials: true,
   },
   helmet: {
     enabled: true,
@@ -27,11 +27,11 @@ export const defaultSecurityConfig: SecurityConfig = {
     ieNoOpen: true,
     noSniff: true,
     referrerPolicy: true,
-    xssFilter: true
+    xssFilter: true,
   },
   requestValidation: {
     maxBodySize: 10 * 1024 * 1024, // 10MB
     requireJsonContent: true,
-    validateContentType: true
-  }
-}; 
+    validateContentType: true,
+  },
+};

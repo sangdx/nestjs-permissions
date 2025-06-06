@@ -32,4 +32,4 @@ export interface SecurityConfig {
     requireJsonContent: boolean;
     validateContentType: boolean;
   };
-} 
+}

@@ -15,17 +15,17 @@ export class GlobalErrorFilter implements ExceptionFilter {
     let errorResponse: any = {
       timestamp: new Date().toISOString(),
       path: request.url,
-      method: request.method
+      method: request.method,
     };
 
     if (exception instanceof HttpException) {
       status = exception.getStatus();
       const exceptionResponse = exception.getResponse();
-      
+
       if (typeof exceptionResponse === 'object') {
         errorResponse = {
           ...errorResponse,
-          ...exceptionResponse
+          ...exceptionResponse,
         };
       } else {
         errorResponse.message = exceptionResponse;
@@ -33,7 +33,7 @@ export class GlobalErrorFilter implements ExceptionFilter {
     } else {
       errorResponse.message = exception.message;
       errorResponse.errorCode = 'INTERNAL_SERVER_ERROR';
-      
+
       // Only include stack trace in development
       if (process.env.NODE_ENV === 'development') {
         errorResponse.stack = exception.stack;
@@ -43,11 +43,9 @@ export class GlobalErrorFilter implements ExceptionFilter {
     // Log the error
     this.logger.error(
       `${request.method} ${request.url} - Status: ${status} - ${JSON.stringify(errorResponse)}`,
-      exception.stack
+      exception.stack,
     );
 
-    response
-      .status(status)
-      .json(errorResponse);
+    response.status(status).json(errorResponse);
   }
-} 
+}

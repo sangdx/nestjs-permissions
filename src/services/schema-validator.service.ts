@@ -19,7 +19,7 @@ export class SchemaValidatorService {
       config.database.entities.permissions.fields,
       ['id', 'name'],
       'permissions',
-      result
+      result,
     );
 
     // Validate router permissions entity fields
@@ -27,7 +27,7 @@ export class SchemaValidatorService {
       config.database.entities.routerPermissions.fields,
       ['id', 'route', 'method', 'permissionId'],
       'routerPermissions',
-      result
+      result,
     );
 
     // Validate user permissions entity fields
@@ -35,7 +35,7 @@ export class SchemaValidatorService {
       config.database.entities.userPermissions.fields,
       ['id', 'userId', 'permissionId', 'grantedAt'],
       'userPermissions',
-      result
+      result,
     );
 
     result.isValid = result.errors.length === 0;
@@ -46,7 +46,7 @@ export class SchemaValidatorService {
     const result: ValidationResult = { isValid: true, errors: [] };
 
     // Get entity names
-    const entityNames = entities.map(e => e.name.toLowerCase());
+    const entityNames = entities.map((e) => e.name.toLowerCase());
 
     // Check required entities exist
     const requiredEntities = ['permission', 'routerpermission', 'userpermission'];
@@ -57,8 +57,8 @@ export class SchemaValidatorService {
     }
 
     // Validate each entity's columns
-    entities.forEach(entity => {
-      const columnNames = entity.columns.map(c => c.propertyName.toLowerCase());
+    entities.forEach((entity) => {
+      const columnNames = entity.columns.map((c) => c.propertyName.toLowerCase());
 
       switch (entity.name.toLowerCase()) {
         case 'permission':
@@ -69,7 +69,7 @@ export class SchemaValidatorService {
             columnNames,
             ['id', 'route', 'method', 'permissionId'],
             entity.name,
-            result
+            result,
           );
           break;
         case 'userpermission':
@@ -77,7 +77,7 @@ export class SchemaValidatorService {
             columnNames,
             ['id', 'userId', 'permissionId', 'grantedAt'],
             entity.name,
-            result
+            result,
           );
           break;
       }
@@ -91,7 +91,7 @@ export class SchemaValidatorService {
     fields: FieldMapping,
     required: string[],
     entityName: string,
-    result: ValidationResult
+    result: ValidationResult,
   ): void {
     // Check required fields are mapped
     for (const field of required) {
@@ -101,14 +101,14 @@ export class SchemaValidatorService {
     }
 
     // Check for duplicate field mappings
-    const mappedFields = Object.values(fields).filter((field): field is string => field !== undefined);
-    const duplicates = mappedFields.filter(
-      (field, index) => mappedFields.indexOf(field) !== index
+    const mappedFields = Object.values(fields).filter(
+      (field): field is string => field !== undefined,
     );
+    const duplicates = mappedFields.filter((field, index) => mappedFields.indexOf(field) !== index);
 
     if (duplicates.length > 0) {
       result.errors.push(
-        `Duplicate field mappings found in ${entityName}: ${duplicates.join(', ')}`
+        `Duplicate field mappings found in ${entityName}: ${duplicates.join(', ')}`,
       );
     }
   }
@@ -117,7 +117,7 @@ export class SchemaValidatorService {
     columns: string[],
     required: string[],
     entityName: string,
-    result: ValidationResult
+    result: ValidationResult,
   ): void {
     for (const column of required) {
       if (!columns.includes(column.toLowerCase())) {
@@ -125,4 +125,4 @@ export class SchemaValidatorService {
       }
     }
   }
-} 
+}

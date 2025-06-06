@@ -37,4 +37,10 @@ export * from './config/default-config';
 export * from './utils/query-builder.util';
 
 // Re-export TypeORM to ensure version compatibility
-export { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm'; 
+export {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';

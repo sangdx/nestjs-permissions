@@ -1,22 +1,21 @@
 import { SetMetadata } from '@nestjs/common';
+import { PERMISSIONS_KEY, PERMISSION_OPTIONS_KEY } from '../constants';
+import { PermissionOptions } from '../interfaces/permission.interface';
 
-export interface PermissionOptions {
-  permissions: string[];
-  strategy?: 'AND' | 'OR';
-  fallback?: 'deny' | 'allow';
-  cache?: boolean;
-}
-
-export const PERMISSIONS_KEY = 'permissions';
-export const PERMISSION_OPTIONS_KEY = 'permission_options';
-
-export const RequirePermission = (options: PermissionOptions) => {
+export function RequirePermission(
+  permissions: string[],
+  options: PermissionOptions = {},
+): MethodDecorator & ClassDecorator {
   return (target: any, key?: string | symbol, descriptor?: TypedPropertyDescriptor<any>) => {
-    SetMetadata(PERMISSIONS_KEY, options.permissions)(target, key!, descriptor!);
-    SetMetadata(PERMISSION_OPTIONS_KEY, {
-      strategy: options.strategy || 'AND',
-      fallback: options.fallback || 'deny',
-      cache: options.cache ?? true
-    })(target, key!, descriptor!);
+    if (descriptor && key) {
+      // Method decorator
+      SetMetadata(PERMISSIONS_KEY, permissions)(target, key, descriptor);
+      SetMetadata(PERMISSION_OPTIONS_KEY, options)(target, key, descriptor);
+    } else {
+      // Class decorator
+      SetMetadata(PERMISSIONS_KEY, permissions)(target);
+      SetMetadata(PERMISSION_OPTIONS_KEY, options)(target);
+    }
+    return descriptor || target;
   };
-}; 
+}

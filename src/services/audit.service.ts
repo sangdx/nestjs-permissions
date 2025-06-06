@@ -30,14 +30,14 @@ export class AuditService {
   constructor(
     @InjectRepository(AuditLogEntity)
     private readonly auditRepository: Repository<AuditLogEntity>,
-    private readonly configService: ConfigService
+    private readonly configService: ConfigService,
   ) {}
 
   async logPermissionCheck(
     userId: string,
     route: string,
     result: boolean,
-    metadata: Record<string, any> = {}
+    metadata: Record<string, any> = {},
   ): Promise<void> {
     if (!this.configService.getConfig().security.enableAuditLog) {
       return;
@@ -48,7 +48,7 @@ export class AuditService {
       action: 'check',
       target: route,
       result,
-      metadata
+      metadata,
     });
   }
 
@@ -57,7 +57,7 @@ export class AuditService {
     permission: string,
     action: 'grant' | 'revoke',
     targetUserId: string,
-    metadata: Record<string, any> = {}
+    metadata: Record<string, any> = {},
   ): Promise<void> {
     if (!this.configService.getConfig().security.enableAuditLog) {
       return;
@@ -70,15 +70,15 @@ export class AuditService {
       result: true,
       metadata: {
         ...metadata,
-        targetUserId
-      }
+        targetUserId,
+      },
     });
   }
 
   async logPermissionModification(
     userId: string,
     permission: string,
-    metadata: Record<string, any> = {}
+    metadata: Record<string, any> = {},
   ): Promise<void> {
     if (!this.configService.getConfig().security.enableAuditLog) {
       return;
@@ -89,21 +89,12 @@ export class AuditService {
       action: 'modify',
       target: permission,
       result: true,
-      metadata
+      metadata,
     });
   }
 
   async getAuditLogs(filters: AuditFilters = {}): Promise<AuditLog[]> {
-    const {
-      userId,
-      action,
-      target,
-      result,
-      startDate,
-      endDate,
-      limit = 100,
-      offset = 0
-    } = filters;
+    const { userId, action, target, result, startDate, endDate, limit = 100, offset = 0 } = filters;
 
     const query = this.auditRepository.createQueryBuilder('audit');
 
@@ -125,22 +116,19 @@ export class AuditService {
 
     if (startDate && endDate) {
       query.andWhere({
-        timestamp: Between(startDate, endDate)
+        timestamp: Between(startDate, endDate),
       });
     } else if (startDate) {
       query.andWhere({
-        timestamp: MoreThanOrEqual(startDate)
+        timestamp: MoreThanOrEqual(startDate),
       });
     } else if (endDate) {
       query.andWhere({
-        timestamp: LessThanOrEqual(endDate)
+        timestamp: LessThanOrEqual(endDate),
       });
     }
 
-    query
-      .orderBy('audit.timestamp', 'DESC')
-      .skip(offset)
-      .take(limit);
+    query.orderBy('audit.timestamp', 'DESC').skip(offset).take(limit);
 
     return query.getMany();
   }
@@ -148,7 +136,7 @@ export class AuditService {
   private async createAuditLog(log: Omit<AuditLog, 'id' | 'timestamp'>): Promise<void> {
     await this.auditRepository.save({
       ...log,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
   }
-} 
+}

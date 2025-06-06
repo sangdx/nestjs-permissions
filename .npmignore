@@ -1,0 +1,43 @@
+# Source
+src/
+tests/
+docs/
+
+# Config files
+.eslintrc
+.prettierrc
+jest.config.js
+tsconfig.json
+.gitignore
+.editorconfig
+
+# IDE
+.idea/
+.vscode/
+*.sublime-*
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory
+coverage/
+
+# Development files
+architecture.md
+plan_build.md
+examples/
+.github/
+
+# Dependencies
+node_modules/
+
+# Build files
+dist/ 

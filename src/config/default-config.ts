@@ -13,8 +13,8 @@ export const defaultConfig: PermissionConfig = {
           level: 'level',
           isActive: 'is_active',
           createdAt: 'created_at',
-          updatedAt: 'updated_at'
-        }
+          updatedAt: 'updated_at',
+        },
       },
       routerPermissions: {
         tableName: 'router_permissions',
@@ -25,8 +25,8 @@ export const defaultConfig: PermissionConfig = {
           permissionId: 'permission_id',
           isActive: 'is_active',
           createdAt: 'created_at',
-          updatedAt: 'updated_at'
-        }
+          updatedAt: 'updated_at',
+        },
       },
       userPermissions: {
         tableName: 'user_permissions',
@@ -36,20 +36,20 @@ export const defaultConfig: PermissionConfig = {
           permissionId: 'permission_id',
           grantedAt: 'granted_at',
           expiresAt: 'expires_at',
-          isActive: 'is_active'
-        }
-      }
-    }
+          isActive: 'is_active',
+        },
+      },
+    },
   },
   permissions: {
     defaultRole: 'user',
     adminRole: 'admin',
     publicRoutes: ['/auth/login', '/auth/register'],
-    permissionStrategy: 'whitelist'
+    permissionStrategy: 'whitelist',
   },
   security: {
     enableCaching: true,
     cacheTimeout: 3600, // 1 hour
-    enableAuditLog: true
-  }
-}; 
+    enableAuditLog: true,
+  },
+};
