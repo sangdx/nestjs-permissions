@@ -131,7 +131,7 @@ export class SecurityConfigPublisherService {
     try {
       // Read existing config
       const configContent = fs.readFileSync(configPath, 'utf8');
-      
+
       // Parse the existing config
       const currentConfig = this.parseConfigFile(configContent);
 
@@ -192,7 +192,11 @@ export class SecurityConfigPublisherService {
       },
     };
 
-    return `import { SecurityConfig } from '@brandazm/dynamic-permissions';\n\nexport const securityConfig: SecurityConfig = ${JSON.stringify(fullConfig, null, 2)};\n`;
+    return `import { SecurityConfig } from '@brandazm/dynamic-permissions';\n\nexport const securityConfig: SecurityConfig = ${JSON.stringify(
+      fullConfig,
+      null,
+      2,
+    )};\n`;
   }
 
   private parseConfigFile(content: string): SecurityConfig {
@@ -210,7 +214,10 @@ export class SecurityConfigPublisherService {
     }
   }
 
-  private mergeConfigs(base: Partial<SecurityConfig>, updates: Partial<SecurityConfig>): SecurityConfig {
+  private mergeConfigs(
+    base: Partial<SecurityConfig>,
+    updates: Partial<SecurityConfig>,
+  ): SecurityConfig {
     return {
       ...base,
       ...updates,
