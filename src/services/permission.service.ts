@@ -82,7 +82,7 @@ export class PermissionService {
         permission_id: 'permission_id',
         is_active: 'is_active',
         created_at: 'created_at',
-        updated_at: 'updated_at'
+        updated_at: 'updated_at',
       } as RouterPermissionFieldConfig,
       'rp',
     );
@@ -184,9 +184,9 @@ export class PermissionService {
       permission_id: 'permission_id',
       is_active: 'is_active',
       created_at: 'created_at',
-      updated_at: 'updated_at'
+      updated_at: 'updated_at',
     } as RouterPermissionFieldConfig;
-    
+
     return queryBuilder
       .where('rp.route = :route AND rp.method = :method', { route, method })
       .getMany();
@@ -202,9 +202,9 @@ export class PermissionService {
       level: 'level',
       is_active: 'is_active',
       created_at: 'created_at',
-      updated_at: 'updated_at'
+      updated_at: 'updated_at',
     } as PermissionFieldConfig;
-    
+
     return queryBuilder.getMany();
   }
 }

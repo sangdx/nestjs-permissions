@@ -47,7 +47,8 @@ export class DynamicQueryBuilder {
     config: UserPermissionFieldConfig,
     alias = 'userPermission',
   ): SelectQueryBuilder<T> {
-    const { id, user_id, permission_id, granted_at, expires_at, is_active, ...customFields } = config;
+    const { id, user_id, permission_id, granted_at, expires_at, is_active, ...customFields } =
+      config;
 
     // Map standard fields
     queryBuilder
