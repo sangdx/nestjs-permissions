@@ -3,6 +3,7 @@ export * from './interfaces/permission.interface';
 export * from './interfaces/user.interface';
 export * from './interfaces/router.interface';
 export * from './interfaces/config.interface';
+export * from './interfaces/security.interface';
 
 // Models
 export * from './models/permission.entity';
