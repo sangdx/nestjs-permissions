@@ -16,7 +16,7 @@ export class ConfigPublisherService {
     basic: {
       name: 'Basic Configuration',
       description: 'Simple permission configuration with minimal setup',
-      config: defaultConfig
+      config: defaultConfig,
     },
     advanced: {
       name: 'Advanced Configuration',
@@ -26,9 +26,9 @@ export class ConfigPublisherService {
         security: {
           enableCaching: true,
           cacheTimeout: 3600,
-          enableAuditLog: true
-        }
-      }
+          enableAuditLog: true,
+        },
+      },
     },
     enterprise: {
       name: 'Enterprise Configuration',
@@ -38,20 +38,20 @@ export class ConfigPublisherService {
         security: {
           enableCaching: true,
           cacheTimeout: 1800,
-          enableAuditLog: true
+          enableAuditLog: true,
         },
         permissions: {
           ...defaultConfig.permissions,
-          permissionStrategy: 'whitelist'
-        }
-      }
-    }
+          permissionStrategy: 'whitelist',
+        },
+      },
+    },
   };
 
   async publishConfigToProject(
     projectPath: string,
-    template: string = 'basic',
-    customizations?: Partial<PermissionConfig>
+    template = 'basic',
+    customizations?: Partial<PermissionConfig>,
   ): Promise<void> {
     // Validate template
     if (!this.templates[template]) {
@@ -66,9 +66,7 @@ export class ConfigPublisherService {
 
     // Merge configurations
     const baseConfig = this.templates[template].config;
-    const finalConfig = customizations
-      ? this.mergeConfigs(baseConfig, customizations)
-      : baseConfig;
+    const finalConfig = customizations ? this.mergeConfigs(baseConfig, customizations) : baseConfig;
 
     // Write configuration file
     const configPath = path.join(configDir, 'permissions.config.js');
@@ -83,21 +81,21 @@ export class ConfigPublisherService {
 
   async updateProjectConfig(
     projectPath: string,
-    updates: Partial<PermissionConfig>
+    updates: Partial<PermissionConfig>,
   ): Promise<void> {
     const configPath = path.join(projectPath, 'config', 'permissions.config.js');
-    
+
     // Check if config exists
     if (!fs.existsSync(configPath)) {
       throw new Error('Configuration file not found');
     }
 
     // Load existing config
-    const currentConfig = require(configPath);
-    
+    const currentConfig = await import(configPath);
+
     // Merge updates
     const updatedConfig = this.mergeConfigs(currentConfig, updates);
-    
+
     // Write updated config
     const configContent = this.generateConfigFile(updatedConfig);
     fs.writeFileSync(configPath, configContent, 'utf8');
@@ -109,7 +107,7 @@ export class ConfigPublisherService {
 
   private mergeConfigs(
     base: Partial<PermissionConfig>,
-    updates: Partial<PermissionConfig>
+    updates: Partial<PermissionConfig>,
   ): PermissionConfig {
     return {
       database: {
@@ -118,41 +116,41 @@ export class ConfigPublisherService {
         entities: {
           permissions: {
             ...base.database?.entities?.permissions,
-            ...updates.database?.entities?.permissions
+            ...updates.database?.entities?.permissions,
           },
           routerPermissions: {
             ...base.database?.entities?.routerPermissions,
-            ...updates.database?.entities?.routerPermissions
+            ...updates.database?.entities?.routerPermissions,
           },
           userPermissions: {
             ...base.database?.entities?.userPermissions,
-            ...updates.database?.entities?.userPermissions
-          }
-        }
+            ...updates.database?.entities?.userPermissions,
+          },
+        },
       },
       permissions: {
         ...base.permissions,
         ...updates.permissions,
         publicRoutes: [
           ...(base.permissions?.publicRoutes || []),
-          ...(updates.permissions?.publicRoutes || [])
-        ]
+          ...(updates.permissions?.publicRoutes || []),
+        ],
       },
       security: {
         ...base.security,
-        ...updates.security
-      }
+        ...updates.security,
+      },
     } as PermissionConfig;
   }
 
   private generateConfigFile(config: Partial<PermissionConfig>): string {
     return `// @ts-check
-const { PermissionConfig } = require('@nestjs/permissions');
+import { PermissionConfig } from '@nestjs/permissions';
 
 /** @type {import('./permissions.config').PermissionConfig} */
 const config = ${JSON.stringify(config, null, 2)};
 
-module.exports = config;
+export default config;
 `;
   }
 
@@ -163,4 +161,12 @@ declare const config: PermissionConfig;
 export = config;
 `;
   }
-} 
+
+  private writeConfigToFile(config: PermissionConfig, filePath: string): void {
+    const configDir = path.dirname(filePath);
+    if (!fs.existsSync(configDir)) {
+      fs.mkdirSync(configDir, { recursive: true });
+    }
+    fs.writeFileSync(filePath, JSON.stringify(config, null, 2));
+  }
+}

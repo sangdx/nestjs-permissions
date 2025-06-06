@@ -18,11 +18,11 @@ export class ConfigModule {
               return service.mergeWithDefaults({ ...currentConfig, ...config });
             }
             return service;
-          }
-        }
+          },
+        },
       ],
       exports: [ConfigService],
-      global: true
+      global: true,
     };
   }
-} 
+}

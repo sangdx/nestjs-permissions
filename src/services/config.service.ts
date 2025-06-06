@@ -5,6 +5,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { SecurityConfig } from '../interfaces/security.interface';
 import { defaultSecurityConfig } from '../config/default-security.config';
+import { ConfigurationException } from '../exceptions/configuration.exception';
 
 @Injectable()
 export class ConfigService {
@@ -24,7 +25,7 @@ export class ConfigService {
     try {
       const configPath = path.join(projectPath, 'permission.config.js');
       if (fs.existsSync(configPath)) {
-        const userConfig = require(configPath);
+        const userConfig = await import(configPath);
         this.config = this.mergeWithDefaults(userConfig);
         this.validateConfig(this.config);
       }
@@ -49,7 +50,10 @@ export class ConfigService {
     // Entities validation
     const requiredEntities = ['permissions', 'routerPermissions', 'userPermissions'];
     for (const entity of requiredEntities) {
-      if (!config.database.entities[entity]?.tableName || !config.database.entities[entity]?.fields) {
+      if (
+        !config.database.entities[entity]?.tableName ||
+        !config.database.entities[entity]?.fields
+      ) {
         throw new Error(`Invalid configuration: missing ${entity} configuration`);
       }
     }
@@ -70,30 +74,30 @@ export class ConfigService {
         entities: {
           permissions: {
             ...defaultConfig.database.entities.permissions,
-            ...userConfig.database?.entities?.permissions
+            ...userConfig.database?.entities?.permissions,
           },
           routerPermissions: {
             ...defaultConfig.database.entities.routerPermissions,
-            ...userConfig.database?.entities?.routerPermissions
+            ...userConfig.database?.entities?.routerPermissions,
           },
           userPermissions: {
             ...defaultConfig.database.entities.userPermissions,
-            ...userConfig.database?.entities?.userPermissions
-          }
-        }
+            ...userConfig.database?.entities?.userPermissions,
+          },
+        },
       },
       permissions: {
         ...defaultConfig.permissions,
         ...userConfig.permissions,
         publicRoutes: [
           ...defaultConfig.permissions.publicRoutes,
-          ...(userConfig.permissions?.publicRoutes || [])
-        ]
+          ...(userConfig.permissions?.publicRoutes || []),
+        ],
       },
       security: {
         ...defaultConfig.security,
-        ...userConfig.security
-      }
+        ...userConfig.security,
+      },
     };
   }
 
@@ -111,20 +115,28 @@ export class ConfigService {
       ...config,
       rateLimit: {
         ...this.securityConfig.rateLimit,
-        ...(config.rateLimit || {})
+        ...(config.rateLimit || {}),
       },
       cors: {
         ...this.securityConfig.cors,
-        ...(config.cors || {})
+        ...(config.cors || {}),
       },
       helmet: {
         ...this.securityConfig.helmet,
-        ...(config.helmet || {})
+        ...(config.helmet || {}),
       },
       requestValidation: {
         ...this.securityConfig.requestValidation,
-        ...(config.requestValidation || {})
-      }
+        ...(config.requestValidation || {}),
+      },
     };
   }
-} 
+
+  private loadConfigFromFile(filePath: string): PermissionConfig {
+    if (!fs.existsSync(filePath)) {
+      throw new ConfigurationException(`Configuration file not found at ${filePath}`);
+    }
+    const configContent = fs.readFileSync(filePath, 'utf8');
+    return JSON.parse(configContent);
+  }
+}

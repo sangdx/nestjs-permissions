@@ -1,16 +1,22 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from './config.service';
-import { Permission } from '../interfaces/permission.interface';
+import { Permission, PermissionOptions } from '../interfaces/permission.interface';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PermissionEntity } from '../models/permission.entity';
 import { UserPermissionEntity } from '../models/user-permission.entity';
 import { RouterPermissionEntity } from '../models/router-permission.entity';
 import { DynamicQueryBuilder } from '../utils/query-builder.util';
+import 'reflect-metadata';
+
+interface CacheEntry {
+  permissions: Permission[];
+  timestamp: number;
+}
 
 @Injectable()
 export class PermissionService {
-  private permissionCache: Map<string, { permissions: Permission[]; timestamp: number }> = new Map();
+  private permissionCache: Map<string, CacheEntry> = new Map();
 
   constructor(
     private readonly configService: ConfigService,
@@ -19,51 +25,35 @@ export class PermissionService {
     @InjectRepository(UserPermissionEntity)
     private readonly userPermissionRepository: Repository<UserPermissionEntity>,
     @InjectRepository(RouterPermissionEntity)
-    private readonly routerPermissionRepository: Repository<RouterPermissionEntity>
+    private readonly routerPermissionRepository: Repository<RouterPermissionEntity>,
   ) {}
 
   async getUserPermissions(userId: string): Promise<Permission[]> {
+    const cached = this.permissionCache.get(userId);
     const config = this.configService.getConfig();
 
-    // Check cache if enabled
-    if (config.security.enableCaching) {
-      const cached = this.permissionCache.get(userId);
-      if (cached && Date.now() - cached.timestamp < config.security.cacheTimeout * 1000) {
-        return cached.permissions;
-      }
+    if (cached && Date.now() - cached.timestamp < config.security.cacheTimeout * 1000) {
+      return cached.permissions;
     }
 
-    // Build dynamic query for user permissions
-    const userPermissionQuery = this.userPermissionRepository.createQueryBuilder('up');
-    DynamicQueryBuilder.buildUserPermissionQuery(
-      userPermissionQuery,
-      config.database.entities.userPermissions.fields,
-      'up'
-    );
+    const userPermissions = await this.userPermissionRepository.find({
+      where: { userId },
+      relations: ['permission'],
+    });
 
-    // Join with permissions table
-    userPermissionQuery
-      .innerJoinAndSelect('up.permission', 'p')
-      .where('up.userId = :userId', { userId })
-      .andWhere('up.isActive = :isActive', { isActive: true });
+    const permissions = userPermissions.map((up) => ({
+      id: up.permission.id,
+      name: up.permission.name,
+      description: up.permission.description,
+      isActive: up.permission.isActive || false,
+      createdAt: up.permission.createdAt || new Date(),
+      updatedAt: up.permission.updatedAt || new Date(),
+    }));
 
-    // Apply dynamic field mapping for permissions
-    DynamicQueryBuilder.buildPermissionQuery(
-      userPermissionQuery,
-      config.database.entities.permissions.fields,
-      'p'
-    );
-
-    const userPermissions = await userPermissionQuery.getMany();
-    const permissions = userPermissions.map(up => up.permission);
-
-    // Update cache
-    if (config.security.enableCaching) {
-      this.permissionCache.set(userId, {
-        permissions,
-        timestamp: Date.now()
-      });
-    }
+    this.permissionCache.set(userId, {
+      permissions,
+      timestamp: Date.now(),
+    });
 
     return permissions;
   }
@@ -81,7 +71,7 @@ export class PermissionService {
     DynamicQueryBuilder.buildRouterPermissionQuery(
       routerPermissionQuery,
       config.database.entities.routerPermissions.fields,
-      'rp'
+      'rp',
     );
 
     // Add conditions
@@ -101,8 +91,8 @@ export class PermissionService {
     const userPermissions = await this.getUserPermissions(userId);
 
     // Check if user has required permissions
-    const hasPermissions = routerPermissions.every(rp =>
-      userPermissions.some(up => up.id === rp.permissionId)
+    const hasPermissions = routerPermissions.every((rp) =>
+      userPermissions.some((up) => up.id === rp.permissionId),
     );
 
     return hasPermissions;
@@ -115,4 +105,23 @@ export class PermissionService {
   async clearAllCache(): Promise<void> {
     this.permissionCache.clear();
   }
-} 
+
+  async validateUserPermissions(
+    userId: string,
+    requiredPermissions: string[],
+    options: PermissionOptions = {},
+  ): Promise<boolean> {
+    const userPermissions = await this.getUserPermissions(userId);
+
+    if (options.strategy === 'OR') {
+      return requiredPermissions.some((permission) =>
+        userPermissions.some((p) => p.name === permission),
+      );
+    }
+
+    // Default to AND strategy
+    return requiredPermissions.every((permission) =>
+      userPermissions.some((p) => p.name === permission),
+    );
+  }
+}

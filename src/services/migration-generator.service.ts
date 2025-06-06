@@ -19,13 +19,9 @@ export class MigrationGeneratorService {
   async generateMigration(
     oldConfig: PermissionConfig,
     newConfig: PermissionConfig,
-    options: MigrationOptions = {}
+    options: MigrationOptions = {},
   ): Promise<string> {
-    const {
-      timestamp = true,
-      directory = 'migrations',
-      name = 'permission-update'
-    } = options;
+    const { timestamp = true, directory = 'migrations', name = 'permission-update' } = options;
 
     // Generate migration content
     const migrationContent = this.generateMigrationContent(oldConfig, newConfig);
@@ -36,9 +32,7 @@ export class MigrationGeneratorService {
     }
 
     // Generate filename
-    const fileName = timestamp
-      ? `${Date.now()}-${name}.ts`
-      : `${name}.ts`;
+    const fileName = timestamp ? `${Date.now()}-${name}.ts` : `${name}.ts`;
 
     const filePath = path.join(directory, fileName);
 
@@ -73,20 +67,20 @@ export class MigrationGeneratorService {
     });
 
     // Generate tables with converted fields
-    lines.push(this.generateTableCreation(
-      database.entities.permissions.tableName,
-      permissionFields
-    ));
+    lines.push(
+      this.generateTableCreation(database.entities.permissions.tableName, permissionFields),
+    );
 
-    lines.push(this.generateTableCreation(
-      database.entities.routerPermissions.tableName,
-      routerPermissionFields
-    ));
+    lines.push(
+      this.generateTableCreation(
+        database.entities.routerPermissions.tableName,
+        routerPermissionFields,
+      ),
+    );
 
-    lines.push(this.generateTableCreation(
-      database.entities.userPermissions.tableName,
-      userPermissionFields
-    ));
+    lines.push(
+      this.generateTableCreation(database.entities.userPermissions.tableName, userPermissionFields),
+    );
 
     return lines.join('\n\n');
   }
@@ -97,16 +91,16 @@ export class MigrationGeneratorService {
     // Convert config fields to required string fields
     const convertToEntityFields = (config: PermissionConfig): Record<string, EntityFields> => {
       const result: Record<string, EntityFields> = {};
-      
+
       Object.entries(config.database.entities).forEach(([key, entity]) => {
         const fields: Record<string, string> = {};
         Object.entries(entity.fields).forEach(([fieldKey, value]) => {
           if (value) fields[fieldKey] = value;
         });
-        
+
         result[key] = {
           tableName: entity.tableName,
-          fields
+          fields,
         };
       });
 
@@ -117,18 +111,17 @@ export class MigrationGeneratorService {
     const newEntities = convertToEntityFields(newConfig);
 
     // Compare and generate alterations for each entity
-    Object.keys(oldEntities).forEach(key => {
-      this.compareAndGenerateAlterations(
-        oldEntities[key],
-        newEntities[key],
-        alterations
-      );
+    Object.keys(oldEntities).forEach((key) => {
+      this.compareAndGenerateAlterations(oldEntities[key], newEntities[key], alterations);
     });
 
     return alterations;
   }
 
-  private generateMigrationContent(oldConfig: PermissionConfig, newConfig: PermissionConfig): string {
+  private generateMigrationContent(
+    oldConfig: PermissionConfig,
+    newConfig: PermissionConfig,
+  ): string {
     const alterations = this.generateAlterTables(oldConfig, newConfig);
     const indexes = this.generateIndexes(newConfig);
 
@@ -138,9 +131,9 @@ export class ${this.generateClassName()} implements MigrationInterface {
   name = '${Date.now()}';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
-    ${alterations.map(alter => `await queryRunner.query(\`${alter}\`);`).join('\n    ')}
+    ${alterations.map((alter) => `await queryRunner.query(\`${alter}\`);`).join('\n    ')}
 
-    ${indexes.map(index => `await queryRunner.query(\`${index}\`);`).join('\n    ')}
+    ${indexes.map((index) => `await queryRunner.query(\`${index}\`);`).join('\n    ')}
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
@@ -174,13 +167,11 @@ export class ${this.generateClassName()} implements MigrationInterface {
   private compareAndGenerateAlterations(
     oldEntity: EntityFields,
     newEntity: EntityFields,
-    alterations: string[]
+    alterations: string[],
   ): void {
     // Handle table rename
     if (oldEntity.tableName !== newEntity.tableName) {
-      alterations.push(
-        `ALTER TABLE "${oldEntity.tableName}" RENAME TO "${newEntity.tableName}";`
-      );
+      alterations.push(`ALTER TABLE "${oldEntity.tableName}" RENAME TO "${newEntity.tableName}";`);
     }
 
     // Handle column changes
@@ -196,18 +187,14 @@ export class ${this.generateClassName()} implements MigrationInterface {
         if (key === 'isActive') type = 'boolean';
         if (key === 'level') type = 'integer';
 
-        alterations.push(
-          `ALTER TABLE "${newEntity.tableName}" ADD COLUMN "${value}" ${type};`
-        );
+        alterations.push(`ALTER TABLE "${newEntity.tableName}" ADD COLUMN "${value}" ${type};`);
       }
     }
 
     // Removed columns
     for (const value of oldFields) {
       if (!newFields.has(value)) {
-        alterations.push(
-          `ALTER TABLE "${newEntity.tableName}" DROP COLUMN "${value}";`
-        );
+        alterations.push(`ALTER TABLE "${newEntity.tableName}" DROP COLUMN "${value}";`);
       }
     }
   }
@@ -220,7 +207,7 @@ export class ${this.generateClassName()} implements MigrationInterface {
     const permissionNameField = database.entities.permissions.fields.name;
     if (permissionNameField) {
       indexes.push(
-        `CREATE INDEX "IDX_${database.entities.permissions.tableName}_name" ON "${database.entities.permissions.tableName}" ("${permissionNameField}");`
+        `CREATE INDEX "IDX_${database.entities.permissions.tableName}_name" ON "${database.entities.permissions.tableName}" ("${permissionNameField}");`,
       );
     }
 
@@ -228,7 +215,7 @@ export class ${this.generateClassName()} implements MigrationInterface {
     const routeField = database.entities.routerPermissions.fields.route;
     if (routeField) {
       indexes.push(
-        `CREATE INDEX "IDX_${database.entities.routerPermissions.tableName}_route" ON "${database.entities.routerPermissions.tableName}" ("${routeField}");`
+        `CREATE INDEX "IDX_${database.entities.routerPermissions.tableName}_route" ON "${database.entities.routerPermissions.tableName}" ("${routeField}");`,
       );
     }
 
@@ -236,7 +223,7 @@ export class ${this.generateClassName()} implements MigrationInterface {
     const userIdField = database.entities.userPermissions.fields.userId;
     if (userIdField) {
       indexes.push(
-        `CREATE INDEX "IDX_${database.entities.userPermissions.tableName}_user" ON "${database.entities.userPermissions.tableName}" ("${userIdField}");`
+        `CREATE INDEX "IDX_${database.entities.userPermissions.tableName}_user" ON "${database.entities.userPermissions.tableName}" ("${userIdField}");`,
       );
     }
 
@@ -246,12 +233,12 @@ export class ${this.generateClassName()} implements MigrationInterface {
   private generateDownMigration(
     oldConfig: PermissionConfig,
     alterations: string[],
-    indexes: string[]
+    indexes: string[],
   ): string {
     const downStatements: string[] = [];
 
     // Revert indexes
-    indexes.forEach(index => {
+    indexes.forEach((index) => {
       const match = index.match(/CREATE INDEX "([^"]+)"/);
       if (match) {
         downStatements.push(`DROP INDEX "${match[1]}";`);
@@ -259,11 +246,13 @@ export class ${this.generateClassName()} implements MigrationInterface {
     });
 
     // Revert alterations in reverse order
-    alterations.reverse().forEach(alter => {
+    alterations.reverse().forEach((alter) => {
       if (alter.includes('ADD COLUMN')) {
         const match = alter.match(/ADD COLUMN "([^"]+)"/);
         if (match) {
-          downStatements.push(`ALTER TABLE "${oldConfig.database.entities.permissions.tableName}" DROP COLUMN "${match[1]}";`);
+          downStatements.push(
+            `ALTER TABLE "${oldConfig.database.entities.permissions.tableName}" DROP COLUMN "${match[1]}";`,
+          );
         }
       } else if (alter.includes('DROP COLUMN')) {
         // We can't restore dropped columns without knowing their types
@@ -271,11 +260,13 @@ export class ${this.generateClassName()} implements MigrationInterface {
       } else if (alter.includes('RENAME TO')) {
         const match = alter.match(/RENAME TO "([^"]+)"/);
         if (match) {
-          downStatements.push(`ALTER TABLE "${match[1]}" RENAME TO "${oldConfig.database.entities.permissions.tableName}";`);
+          downStatements.push(
+            `ALTER TABLE "${match[1]}" RENAME TO "${oldConfig.database.entities.permissions.tableName}";`,
+          );
         }
       }
     });
 
-    return downStatements.map(stmt => `await queryRunner.query(\`${stmt}\`);`).join('\n    ');
+    return downStatements.map((stmt) => `await queryRunner.query(\`${stmt}\`);`).join('\n    ');
   }
-} 
+}

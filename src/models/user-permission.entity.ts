@@ -23,4 +23,4 @@ export class UserPermissionEntity implements UserPermission {
 
   // Dynamic columns will be added at runtime based on configuration
   [key: string]: any;
-} 
+}

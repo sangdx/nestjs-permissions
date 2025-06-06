@@ -21,7 +21,10 @@ import { ErrorHandlingModule } from './error-handling.module';
 
 @Module({})
 export class PermissionsModule {
-  static register(config?: Partial<PermissionConfig>, securityConfig?: Partial<SecurityConfig>): DynamicModule {
+  static register(
+    config?: Partial<PermissionConfig>,
+    securityConfig?: Partial<SecurityConfig>,
+  ): DynamicModule {
     return {
       module: PermissionsModule,
       imports: [
@@ -30,10 +33,10 @@ export class PermissionsModule {
           PermissionEntity,
           UserPermissionEntity,
           RouterPermissionEntity,
-          AuditLogEntity
+          AuditLogEntity,
         ]),
         SecurityModule,
-        ErrorHandlingModule
+        ErrorHandlingModule,
       ],
       providers: [
         ConfigService,
@@ -47,8 +50,8 @@ export class PermissionsModule {
         MigrationGeneratorService,
         {
           provide: 'SECURITY_CONFIG',
-          useValue: securityConfig
-        }
+          useValue: securityConfig,
+        },
       ],
       exports: [
         PermissionService,
@@ -60,8 +63,8 @@ export class PermissionsModule {
         ConfigPublisherService,
         SecurityConfigPublisherService,
         MigrationGeneratorService,
-        ConfigModule
-      ]
+        ConfigModule,
+      ],
     };
   }
-} 
+}

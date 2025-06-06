@@ -12,7 +12,7 @@ export class AuditLogEntity {
 
   @Column({
     type: 'enum',
-    enum: ['check', 'grant', 'revoke', 'modify']
+    enum: ['check', 'grant', 'revoke', 'modify'],
   })
   action!: AuditAction;
 
@@ -27,4 +27,4 @@ export class AuditLogEntity {
 
   @CreateDateColumn()
   timestamp!: Date;
-} 
+}

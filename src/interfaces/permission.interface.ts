@@ -1,12 +1,16 @@
 export interface Permission {
-  id: string | number;
+  id: string;
   name: string;
   description?: string;
-  level?: number;
-  isActive?: boolean;
-  createdAt?: Date;
-  updatedAt?: Date;
-  [key: string]: any; // Support for custom fields
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface PermissionOptions {
+  strategy?: 'AND' | 'OR';
+  fallback?: 'deny' | 'allow';
+  cache?: boolean;
 }
 
 export interface PermissionFieldConfig {
@@ -18,4 +22,4 @@ export interface PermissionFieldConfig {
   createdAt?: string;
   updatedAt?: string;
   [customField: string]: string | undefined;
-} 
+}

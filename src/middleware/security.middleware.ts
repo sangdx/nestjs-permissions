@@ -22,21 +22,23 @@ export class SecurityMiddleware implements NestMiddleware {
         contentSecurityPolicy: this.config.helmet.contentSecurityPolicy,
         crossOriginEmbedderPolicy: this.config.helmet.crossOriginEmbedderPolicy,
         crossOriginOpenerPolicy: this.config.helmet.crossOriginOpenerPolicy,
-        crossOriginResourcePolicy: this.config.helmet.crossOriginResourcePolicy 
-          ? { policy: 'same-site' } 
+        crossOriginResourcePolicy: this.config.helmet.crossOriginResourcePolicy
+          ? { policy: 'same-site' }
           : false,
         dnsPrefetchControl: this.config.helmet.dnsPrefetchControl,
         frameguard: this.config.helmet.frameguard ? { action: 'deny' } : false,
         hidePoweredBy: this.config.helmet.hidePoweredBy,
-        hsts: this.config.helmet.hsts ? {
-          maxAge: 31536000,
-          includeSubDomains: true,
-          preload: true,
-        } : false,
+        hsts: this.config.helmet.hsts
+          ? {
+              maxAge: 31536000,
+              includeSubDomains: true,
+              preload: true,
+            }
+          : false,
         ieNoOpen: this.config.helmet.ieNoOpen,
         noSniff: this.config.helmet.noSniff,
-        referrerPolicy: this.config.helmet.referrerPolicy 
-          ? { policy: 'strict-origin-when-cross-origin' } 
+        referrerPolicy: this.config.helmet.referrerPolicy
+          ? { policy: 'strict-origin-when-cross-origin' }
           : false,
         xssFilter: this.config.helmet.xssFilter,
       });
@@ -137,7 +139,9 @@ export class SecurityMiddleware implements NestMiddleware {
   }
 
   private isAllowedOrigin(origin: string): boolean {
-    return this.config.cors.allowedOrigins.includes(origin) || 
-           this.config.cors.allowedOrigins.includes('*');
+    return (
+      this.config.cors.allowedOrigins.includes(origin) ||
+      this.config.cors.allowedOrigins.includes('*')
+    );
   }
-} 
+}

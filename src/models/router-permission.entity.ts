@@ -1,4 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import { RouterPermission } from '../interfaces/router.interface';
 
 @Entity('router_permissions')
@@ -26,4 +32,4 @@ export class RouterPermissionEntity implements RouterPermission {
 
   // Dynamic columns will be added at runtime based on configuration
   [key: string]: any;
-} 
+}
