@@ -16,10 +16,7 @@ export interface EntityFields {
 
 @Injectable()
 export class MigrationGeneratorService {
-  async generateMigration(
-    name: string,
-    directory = 'src/migrations',
-  ): Promise<void> {
+  async generateMigration(name: string, directory = 'src/migrations'): Promise<void> {
     try {
       // Create migrations directory if it doesn't exist
       if (!fs.existsSync(directory)) {
@@ -56,10 +53,7 @@ export class MigrationGeneratorService {
       }
       throw new Error('Configuration file not found: permissions.config.ts');
     } catch (error) {
-      throw new MigrationException(
-        'CONFIG_LOAD_ERROR',
-        `Failed to load config: ${error.message}`,
-      );
+      throw new MigrationException('CONFIG_LOAD_ERROR', `Failed to load config: ${error.message}`);
     }
   }
 
@@ -71,10 +65,7 @@ export class MigrationGeneratorService {
       .join('');
   }
 
-  private generateMigrationContent(
-    config: PermissionConfig,
-    name: string,
-  ): string {
+  private generateMigrationContent(config: PermissionConfig, name: string): string {
     const createTables = this.generateCreateTables(config);
     const indexes = this.generateIndexes(config);
 
@@ -84,7 +75,10 @@ export class ${this.generateClassName(name)} implements MigrationInterface {
   name = '${Date.now()}';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
-    ${createTables.split('\n').map(line => `await queryRunner.query(\`${line}\`);`).join('\n    ')}
+    ${createTables
+      .split('\n')
+      .map((line) => `await queryRunner.query(\`${line}\`);`)
+      .join('\n    ')}
 
     ${indexes.map((index) => `await queryRunner.query(\`${index}\`);`).join('\n    ')}
   }

@@ -7,7 +7,10 @@ export type MigrationExceptionType =
   | 'CONFIG_LOAD_ERROR';
 
 export class MigrationException extends HttpException {
-  constructor(public type: MigrationExceptionType, details: string) {
+  constructor(
+    public type: MigrationExceptionType,
+    details: string,
+  ) {
     super(
       {
         message: `Migration error: ${details}`,
