@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { EntityMetadata } from 'typeorm';
 import { PermissionConfig } from '../interfaces/config.interface';
 import * as path from 'path';
+import * as fs from 'fs';
 
 export interface ValidationResult {
   isValid: boolean;
@@ -129,15 +130,153 @@ export class SchemaValidatorService {
 
   async validateConfig(projectPath: string): Promise<boolean> {
     try {
-      // Implementation here
-      // This is a placeholder implementation that always returns true
-      // In a real implementation, this would validate the config file against a schema
-      const configPath = path.join(projectPath, 'config', 'permissions.config.js');
-      console.log(`Validating configuration at ${configPath}`);
+      const configPath = path.join(projectPath, 'config', 'permissions.config.ts');
+      
+      // Check if config file exists
+      if (!fs.existsSync(configPath)) {
+        console.error('Configuration file not found:', configPath);
+        return false;
+      }
+
+      // Read and validate the configuration file
+      const config = await this.loadConfig(configPath);
+      if (!config) {
+        return false;
+      }
+
+      // Validate required top-level properties
+      if (!this.validateTopLevelConfig(config)) {
+        return false;
+      }
+
+      // Validate database configuration
+      if (!this.validateDatabaseConfig(config.database)) {
+        return false;
+      }
+
+      // Validate permissions configuration
+      if (!this.validatePermissionsConfig(config.permissions)) {
+        return false;
+      }
+
+      // Validate security configuration
+      if (!this.validateSecurityConfig(config.security)) {
+        return false;
+      }
+
+      // Validate field mappings
+      const fieldValidation = this.validateFieldMappings(config);
+      if (!fieldValidation.isValid) {
+        console.error('Field mapping validation failed:', fieldValidation.errors);
+        return false;
+      }
+
+      console.log('Configuration validation successful');
       return true;
     } catch (error) {
       console.error('Error validating configuration:', error);
       return false;
     }
+  }
+
+  private async loadConfig(configPath: string): Promise<PermissionConfig | null> {
+    try {
+      const config = require(configPath);
+      return config.default || config;
+    } catch (error) {
+      console.error('Error loading configuration file:', error);
+      return null;
+    }
+  }
+
+  private validateTopLevelConfig(config: any): boolean {
+    const requiredProperties = ['database', 'permissions', 'security'];
+    
+    for (const prop of requiredProperties) {
+      if (!config[prop]) {
+        console.error(`Missing required top-level property: ${prop}`);
+        return false;
+      }
+    }
+    
+    return true;
+  }
+
+  private validateDatabaseConfig(database: any): boolean {
+    if (!database.entities) {
+      console.error('Missing database entities configuration');
+      return false;
+    }
+
+    const requiredEntities = ['permissions', 'routerPermissions', 'userPermissions'];
+    for (const entity of requiredEntities) {
+      if (!database.entities[entity]) {
+        console.error(`Missing required entity configuration: ${entity}`);
+        return false;
+      }
+
+      if (!database.entities[entity].tableName) {
+        console.error(`Missing tableName for entity: ${entity}`);
+        return false;
+      }
+
+      if (!database.entities[entity].fields) {
+        console.error(`Missing fields configuration for entity: ${entity}`);
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  private validatePermissionsConfig(permissions: any): boolean {
+    const requiredProperties = ['defaultRole', 'adminRole', 'permissionStrategy'];
+    
+    for (const prop of requiredProperties) {
+      if (!permissions[prop]) {
+        console.error(`Missing required permissions property: ${prop}`);
+        return false;
+      }
+    }
+
+    if (permissions.permissionStrategy !== 'whitelist' && permissions.permissionStrategy !== 'blacklist') {
+      console.error('Invalid permission strategy. Must be either "whitelist" or "blacklist"');
+      return false;
+    }
+
+    if (!Array.isArray(permissions.publicRoutes)) {
+      console.error('publicRoutes must be an array');
+      return false;
+    }
+
+    return true;
+  }
+
+  private validateSecurityConfig(security: any): boolean {
+    const requiredProperties = ['enableCaching', 'cacheTimeout', 'enableAuditLog'];
+    
+    for (const prop of requiredProperties) {
+      if (security[prop] === undefined) {
+        console.error(`Missing required security property: ${prop}`);
+        return false;
+      }
+    }
+
+    if (typeof security.enableCaching !== 'boolean') {
+      console.error('enableCaching must be a boolean');
+      return false;
+    }
+
+    if (typeof security.cacheTimeout !== 'number' || security.cacheTimeout < 0) {
+      console.error('cacheTimeout must be a positive number');
+      return false;
+    }
+
+    if (typeof security.enableAuditLog !== 'boolean') {
+      console.error('enableAuditLog must be a boolean');
+      return false;
+    }
+
+    return true;
   }
 }

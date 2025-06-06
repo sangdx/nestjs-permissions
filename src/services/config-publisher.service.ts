@@ -69,7 +69,7 @@ export class ConfigPublisherService {
     const finalConfig = customizations ? this.mergeConfigs(baseConfig, customizations) : baseConfig;
 
     // Write configuration file
-    const configPath = path.join(configDir, 'permissions.config.js');
+    const configPath = path.join(configDir, 'permissions.config.ts');
     const configContent = this.generateConfigFile(finalConfig);
     fs.writeFileSync(configPath, configContent, 'utf8');
 
@@ -83,7 +83,7 @@ export class ConfigPublisherService {
     projectPath: string,
     updates: Partial<PermissionConfig>,
   ): Promise<void> {
-    const configPath = path.join(projectPath, 'config', 'permissions.config.js');
+    const configPath = path.join(projectPath, 'config', 'permissions.config.ts');
 
     // Check if config exists
     if (!fs.existsSync(configPath)) {

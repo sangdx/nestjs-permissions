@@ -1,7 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { PermissionConfig } from '../interfaces/config.interface';
-import * as path from 'path';
-import * as fs from 'fs';
 
 export interface MigrationOptions {
   timestamp?: boolean;
@@ -20,7 +18,7 @@ export class MigrationGeneratorService {
     fromVersion: string,
     toVersion: string,
     name: string,
-    directory: string = 'src/migrations',
+    directory = 'src/migrations',
   ): Promise<void> {
     // Implementation here
     // This is a placeholder implementation
