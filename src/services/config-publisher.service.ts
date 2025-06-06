@@ -124,15 +124,10 @@ export class ConfigPublisherService {
     const baseConfig = this.templates[template].config;
     const finalConfig = customizations ? this.mergeConfigs(baseConfig, customizations) : baseConfig;
 
-    // Write configuration file
+    // Write configuration typescript file
     const configPath = path.join(configDir, 'permissions.config.ts');
     const configContent = this.generateConfigFile(finalConfig);
     fs.writeFileSync(configPath, configContent, 'utf8');
-
-    // Write TypeScript types
-    const typesPath = path.join(configDir, 'permissions.config.d.ts');
-    const typesContent = this.generateTypesFile();
-    fs.writeFileSync(typesPath, typesContent, 'utf8');
   }
 
   async updateProjectConfig(

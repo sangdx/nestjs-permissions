@@ -8,15 +8,13 @@ import { UserPermissionEntity } from '../models/user-permission.entity';
 import { RouterPermissionEntity } from '../models/router-permission.entity';
 import { DynamicQueryBuilder } from '../utils/query-builder.util';
 import 'reflect-metadata';
-import { PermissionConfig } from '../interfaces/config.interface';
-import { RouterPermissionFieldConfig } from '../interfaces/router.interface';
 import { PermissionFieldConfig } from '../interfaces/permission.interface';
-import { UserPermissionFieldConfig } from '../interfaces/user.interface';
-import { buildQuery } from '../utils/query-builder.util';
+import { RouterPermissionFieldConfig } from '../interfaces/router.interface';
 
 interface CacheEntry {
   permissions: Permission[];
   timestamp: number;
+  hasPermission?: boolean;
 }
 
 @Injectable()
@@ -51,9 +49,10 @@ export class PermissionService {
       id: up.permission.id,
       name: up.permission.name,
       description: up.permission.description,
-      isActive: up.permission.isActive || false,
-      createdAt: up.permission.createdAt || new Date(),
-      updatedAt: up.permission.updatedAt || new Date(),
+      level: up.permission.level,
+      is_active: up.permission.is_active,
+      created_at: up.permission.created_at || new Date(),
+      updated_at: up.permission.updated_at || new Date(),
     }));
 
     this.permissionCache.set(userId, {
@@ -76,7 +75,15 @@ export class PermissionService {
     const routerPermissionQuery = this.routerPermissionRepository.createQueryBuilder('rp');
     DynamicQueryBuilder.buildRouterPermissionQuery(
       routerPermissionQuery,
-      config.database.entities.routerPermissions.fields,
+      {
+        id: 'id',
+        route: 'route',
+        method: 'method',
+        permission_id: 'permission_id',
+        is_active: 'is_active',
+        created_at: 'created_at',
+        updated_at: 'updated_at'
+      } as RouterPermissionFieldConfig,
       'rp',
     );
 
@@ -84,7 +91,7 @@ export class PermissionService {
     routerPermissionQuery
       .where('rp.route = :route', { route })
       .andWhere('rp.method = :method', { method })
-      .andWhere('rp.isActive = :isActive', { isActive: true });
+      .andWhere('rp.is_active = :isActive', { isActive: true });
 
     const routerPermissions = await routerPermissionQuery.getMany();
 
@@ -98,7 +105,7 @@ export class PermissionService {
 
     // Check if user has required permissions
     const hasPermissions = routerPermissions.every((rp) =>
-      userPermissions.some((up) => up.id === rp.permissionId),
+      userPermissions.some((up) => up.id === rp.permission_id),
     );
 
     return hasPermissions;
@@ -138,16 +145,16 @@ export class PermissionService {
     const cacheKey = `permission:${userId}:${route}:${method}`;
     const cached = this.cache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < config.security.cacheTimeout * 1000) {
-      return cached.hasPermission;
+      return cached.hasPermission || false;
     }
 
     // Get user permissions
     const userPermissions = await this.getUserPermissions(userId);
-    const permissionIds = userPermissions.map((up) => up.permissionId);
+    const permissionIds = userPermissions.map((up) => up.id);
 
     // Get router permissions for the route and method
     const routerPermissions = await this.getRouterPermissions(route, method);
-    const requiredPermissionIds = routerPermissions.map((rp) => rp.permissionId);
+    const requiredPermissionIds = routerPermissions.map((rp) => rp.permission_id);
 
     // Check if user has any of the required permissions
     const hasPermission = permissionIds.some((id) => requiredPermissionIds.includes(id));
@@ -156,6 +163,7 @@ export class PermissionService {
     if (config.security.enableCaching) {
       this.cache.set(cacheKey, {
         timestamp: Date.now(),
+        permissions: [],
         hasPermission,
       });
     }
@@ -169,14 +177,34 @@ export class PermissionService {
   ): Promise<RouterPermissionEntity[]> {
     const config = this.configService.getConfig();
     const queryBuilder = this.routerPermissionRepository.createQueryBuilder('rp');
-    const fields = config.database.entities.routerPermissions.fields as RouterPermissionFieldConfig;
-    return new DynamicQueryBuilder(queryBuilder, fields).where({ route, method }).getMany();
+    const fields = {
+      id: 'id',
+      route: 'route',
+      method: 'method',
+      permission_id: 'permission_id',
+      is_active: 'is_active',
+      created_at: 'created_at',
+      updated_at: 'updated_at'
+    } as RouterPermissionFieldConfig;
+    
+    return queryBuilder
+      .where('rp.route = :route AND rp.method = :method', { route, method })
+      .getMany();
   }
 
   async getPermissions(): Promise<PermissionEntity[]> {
     const config = this.configService.getConfig();
     const queryBuilder = this.permissionRepository.createQueryBuilder('p');
-    const fields = config.database.entities.permissions.fields as PermissionFieldConfig;
-    return new DynamicQueryBuilder(queryBuilder, fields).getMany();
+    const fields = {
+      id: 'id',
+      name: 'name',
+      description: 'description',
+      level: 'level',
+      is_active: 'is_active',
+      created_at: 'created_at',
+      updated_at: 'updated_at'
+    } as PermissionFieldConfig;
+    
+    return queryBuilder.getMany();
   }
 }

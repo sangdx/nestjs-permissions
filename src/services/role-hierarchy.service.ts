@@ -81,14 +81,7 @@ export class RoleHierarchyService {
 
     // Fetch actual permission objects and ensure they match the Permission interface
     const permissions = await this.permissionRepository.findByIds([...permissionIds]);
-    return permissions.map((p) => ({
-      id: p.id,
-      name: p.name,
-      description: p.description,
-      isActive: p.isActive || false,
-      createdAt: p.createdAt || new Date(),
-      updatedAt: p.updatedAt || new Date(),
-    }));
+    return permissions.map(this.mapPermissionEntity);
   }
 
   private findRoleNode(node: RoleNode, role: string): RoleNode | null {
@@ -121,32 +114,18 @@ export class RoleHierarchyService {
     const cachedPermissions = this.rolePermissions.get(role);
     if (cachedPermissions) {
       const permissions = await this.permissionRepository.findByIds([...cachedPermissions]);
-      return permissions.map((p) => ({
-        id: p.id,
-        name: p.name,
-        description: p.description,
-        isActive: p.isActive || false,
-        createdAt: p.createdAt || new Date(),
-        updatedAt: p.updatedAt || new Date(),
-      }));
+      return permissions.map(this.mapPermissionEntity);
     }
 
     // Fetch permissions from database
     const permissions = await this.permissionRepository.find({
-      where: { name: role, isActive: true },
+      where: { name: role, is_active: true },
     });
 
     // Cache the results
     this.rolePermissions.set(role, new Set(permissions.map((p) => String(p.id))));
 
-    return permissions.map((p) => ({
-      id: p.id,
-      name: p.name,
-      description: p.description,
-      isActive: p.isActive || false,
-      createdAt: p.createdAt || new Date(),
-      updatedAt: p.updatedAt || new Date(),
-    }));
+    return permissions.map(this.mapPermissionEntity);
   }
 
   validateRoleHierarchy(hierarchy: RoleHierarchy): boolean {
@@ -249,12 +228,7 @@ export class RoleHierarchyService {
     return permissions;
   }
 
-  async validateRoleHierarchy(role: string): Promise<boolean> {
-    const permissions = await this.getPermissionsByRole(role);
-    return permissions.length > 0;
-  }
-
-  private mapPermissionEntity(permission: PermissionEntity): PermissionEntity {
+  private mapPermissionEntity(permission: PermissionEntity): Permission {
     return {
       id: permission.id,
       name: permission.name,
