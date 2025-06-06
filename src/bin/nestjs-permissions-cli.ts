@@ -32,14 +32,12 @@ program
 
 program
   .command('generate-migration')
-  .description('Generate migration between two versions')
-  .option('-f, --from <version>', 'Source version')
-  .option('-t, --to <version>', 'Target version')
+  .description('Generate migration')
   .option('-n, --name <name>', 'Migration name')
   .option('-d, --dir <directory>', 'Migration directory', 'src/migrations')
   .action(async (options) => {
     const migrationGenerator = new MigrationGeneratorService();
-    await migrationGenerator.generateMigration(options.from, options.to, options.name, options.dir);
+    await migrationGenerator.generateMigration(options.name, options.dir);
     console.log('Migration generated successfully');
   });
 

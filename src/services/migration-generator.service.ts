@@ -5,7 +5,6 @@ import * as path from 'path';
 import { MigrationException } from '../exceptions/migration.exception';
 
 export interface MigrationOptions {
-  timestamp?: boolean;
   directory?: string;
   name?: string;
 }
@@ -18,8 +17,6 @@ export interface EntityFields {
 @Injectable()
 export class MigrationGeneratorService {
   async generateMigration(
-    fromVersion: string,
-    toVersion: string,
     name: string,
     directory = 'src/migrations',
   ): Promise<void> {
@@ -29,12 +26,11 @@ export class MigrationGeneratorService {
         fs.mkdirSync(directory, { recursive: true });
       }
 
-      // Load configurations for both versions
-      const oldConfig = await this.loadConfig(fromVersion);
-      const newConfig = await this.loadConfig(toVersion);
+      // Load configuration
+      const config = await this.loadConfig();
 
       // Generate migration content
-      const migrationContent = this.generateMigrationContent(oldConfig, newConfig, name);
+      const migrationContent = this.generateMigrationContent(config, name);
 
       // Generate filename with timestamp
       const timestamp = new Date().getTime();
@@ -51,18 +47,18 @@ export class MigrationGeneratorService {
     }
   }
 
-  private async loadConfig(version: string): Promise<PermissionConfig> {
+  private async loadConfig(): Promise<PermissionConfig> {
     try {
-      // Try to load config from version file
-      const configPath = path.join(process.cwd(), 'config', `permissions.${version}.config.js`);
+      // Load config from permissions.config.ts
+      const configPath = path.join(process.cwd(), 'config', 'permissions.config.ts');
       if (fs.existsSync(configPath)) {
         return require(configPath);
       }
-      throw new Error(`Configuration file not found for version: ${version}`);
+      throw new Error('Configuration file not found: permissions.config.ts');
     } catch (error) {
       throw new MigrationException(
-        'SCHEMA_MISMATCH',
-        `Failed to load config for version ${version}: ${error.message}`,
+        'CONFIG_LOAD_ERROR',
+        `Failed to load config: ${error.message}`,
       );
     }
   }
@@ -73,6 +69,33 @@ export class MigrationGeneratorService {
       .split(/[-_]/)
       .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
       .join('');
+  }
+
+  private generateMigrationContent(
+    config: PermissionConfig,
+    name: string,
+  ): string {
+    const createTables = this.generateCreateTables(config);
+    const indexes = this.generateIndexes(config);
+
+    return `import { MigrationInterface, QueryRunner } from 'typeorm';
+
+export class ${this.generateClassName(name)} implements MigrationInterface {
+  name = '${Date.now()}';
+
+  public async up(queryRunner: QueryRunner): Promise<void> {
+    ${createTables.split('\n').map(line => `await queryRunner.query(\`${line}\`);`).join('\n    ')}
+
+    ${indexes.map((index) => `await queryRunner.query(\`${index}\`);`).join('\n    ')}
+  }
+
+  public async down(queryRunner: QueryRunner): Promise<void> {
+    // Drop tables in reverse order
+    await queryRunner.query(\`DROP TABLE IF EXISTS "${config.database.entities.userPermissions.tableName}"\`);
+    await queryRunner.query(\`DROP TABLE IF EXISTS "${config.database.entities.routerPermissions.tableName}"\`);
+    await queryRunner.query(\`DROP TABLE IF EXISTS "${config.database.entities.permissions.tableName}"\`);
+  }
+}`;
   }
 
   generateCreateTables(config: PermissionConfig): string {
@@ -149,31 +172,6 @@ export class MigrationGeneratorService {
     });
 
     return alterations;
-  }
-
-  private generateMigrationContent(
-    oldConfig: PermissionConfig,
-    newConfig: PermissionConfig,
-    name: string,
-  ): string {
-    const alterations = this.generateAlterTables(oldConfig, newConfig);
-    const indexes = this.generateIndexes(newConfig);
-
-    return `import { MigrationInterface, QueryRunner } from 'typeorm';
-
-export class ${this.generateClassName(name)} implements MigrationInterface {
-  name = '${Date.now()}';
-
-  public async up(queryRunner: QueryRunner): Promise<void> {
-    ${alterations.map((alter) => `await queryRunner.query(\`${alter}\`);`).join('\n    ')}
-
-    ${indexes.map((index) => `await queryRunner.query(\`${index}\`);`).join('\n    ')}
-  }
-
-  public async down(queryRunner: QueryRunner): Promise<void> {
-    ${this.generateDownMigration(oldConfig, alterations, indexes)}
-  }
-}`;
   }
 
   private generateTableCreation(tableName: string, fields: Record<string, string>): string {

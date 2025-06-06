@@ -1,7 +1,13 @@
 import { HttpException, HttpStatus } from '@nestjs/common';
 
+export type MigrationExceptionType =
+  | 'MIGRATION_FAILED'
+  | 'SCHEMA_MISMATCH'
+  | 'ROLLBACK_FAILED'
+  | 'CONFIG_LOAD_ERROR';
+
 export class MigrationException extends HttpException {
-  constructor(type: 'MIGRATION_FAILED' | 'SCHEMA_MISMATCH' | 'ROLLBACK_FAILED', details: string) {
+  constructor(public type: MigrationExceptionType, details: string) {
     super(
       {
         message: `Migration error: ${details}`,
