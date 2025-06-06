@@ -163,7 +163,10 @@ export class PermissionService {
     return hasPermission;
   }
 
-  private async getRouterPermissions(route: string, method: string): Promise<RouterPermissionEntity[]> {
+  private async getRouterPermissions(
+    route: string,
+    method: string,
+  ): Promise<RouterPermissionEntity[]> {
     const config = this.configService.getConfig();
     const queryBuilder = this.routerPermissionRepository.createQueryBuilder('rp');
     const fields = config.database.entities.routerPermissions.fields as RouterPermissionFieldConfig;
