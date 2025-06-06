@@ -8,6 +8,11 @@ import { UserPermissionEntity } from '../models/user-permission.entity';
 import { RouterPermissionEntity } from '../models/router-permission.entity';
 import { DynamicQueryBuilder } from '../utils/query-builder.util';
 import 'reflect-metadata';
+import { PermissionConfig } from '../interfaces/config.interface';
+import { RouterPermissionFieldConfig } from '../interfaces/router.interface';
+import { PermissionFieldConfig } from '../interfaces/permission.interface';
+import { UserPermissionFieldConfig } from '../interfaces/user.interface';
+import { buildQuery } from '../utils/query-builder.util';
 
 interface CacheEntry {
   permissions: Permission[];
@@ -17,6 +22,7 @@ interface CacheEntry {
 @Injectable()
 export class PermissionService {
   private permissionCache: Map<string, CacheEntry> = new Map();
+  private readonly cache: Map<string, CacheEntry> = new Map();
 
   constructor(
     private readonly configService: ConfigService,
@@ -123,5 +129,51 @@ export class PermissionService {
     return requiredPermissions.every((permission) =>
       userPermissions.some((p) => p.name === permission),
     );
+  }
+
+  async hasPermission(userId: string, route: string, method: string): Promise<boolean> {
+    const config = this.configService.getConfig();
+
+    // Check cache first
+    const cacheKey = `permission:${userId}:${route}:${method}`;
+    const cached = this.cache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < config.security.cacheTimeout * 1000) {
+      return cached.hasPermission;
+    }
+
+    // Get user permissions
+    const userPermissions = await this.getUserPermissions(userId);
+    const permissionIds = userPermissions.map((up) => up.permissionId);
+
+    // Get router permissions for the route and method
+    const routerPermissions = await this.getRouterPermissions(route, method);
+    const requiredPermissionIds = routerPermissions.map((rp) => rp.permissionId);
+
+    // Check if user has any of the required permissions
+    const hasPermission = permissionIds.some((id) => requiredPermissionIds.includes(id));
+
+    // Cache the result
+    if (config.security.enableCaching) {
+      this.cache.set(cacheKey, {
+        timestamp: Date.now(),
+        hasPermission,
+      });
+    }
+
+    return hasPermission;
+  }
+
+  private async getRouterPermissions(route: string, method: string): Promise<RouterPermissionEntity[]> {
+    const config = this.configService.getConfig();
+    const queryBuilder = this.routerPermissionRepository.createQueryBuilder('rp');
+    const fields = config.database.entities.routerPermissions.fields as RouterPermissionFieldConfig;
+    return new DynamicQueryBuilder(queryBuilder, fields).where({ route, method }).getMany();
+  }
+
+  async getPermissions(): Promise<PermissionEntity[]> {
+    const config = this.configService.getConfig();
+    const queryBuilder = this.permissionRepository.createQueryBuilder('p');
+    const fields = config.database.entities.permissions.fields as PermissionFieldConfig;
+    return new DynamicQueryBuilder(queryBuilder, fields).getMany();
   }
 }

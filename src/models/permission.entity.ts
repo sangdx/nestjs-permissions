@@ -1,32 +1,25 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  CreateDateColumn,
-  UpdateDateColumn,
-} from 'typeorm';
-import { Permission } from '../interfaces/permission.interface';
+import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('permissions')
-export class PermissionEntity implements Permission {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+export class PermissionEntity {
+  @PrimaryGeneratedColumn()
+  id: number;
 
   @Column()
   name: string;
 
-  @Column({ nullable: true })
-  description?: string;
+  @Column()
+  description: string;
 
-  @Column({ default: true })
-  isActive: boolean;
+  @Column()
+  level: number;
 
-  @CreateDateColumn()
-  createdAt: Date;
+  @Column({ name: 'is_active' })
+  is_active: boolean;
 
-  @UpdateDateColumn()
-  updatedAt: Date;
+  @Column({ name: 'created_at' })
+  created_at: Date;
 
-  // Dynamic columns will be added at runtime based on configuration
-  [key: string]: any;
+  @Column({ name: 'updated_at' })
+  updated_at: Date;
 }

@@ -1,35 +1,25 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  CreateDateColumn,
-  UpdateDateColumn,
-} from 'typeorm';
-import { RouterPermission } from '../interfaces/router.interface';
+import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('router_permissions')
-export class RouterPermissionEntity implements RouterPermission {
-  @PrimaryGeneratedColumn('uuid')
-  id!: string;
+export class RouterPermissionEntity {
+  @PrimaryGeneratedColumn()
+  id: number;
 
   @Column()
-  route!: string;
+  route: string;
 
   @Column()
-  method!: string;
+  method: string;
 
-  @Column()
-  permissionId!: string;
+  @Column({ name: 'permission_id' })
+  permission_id: number;
 
-  @Column({ default: true })
-  isActive!: boolean;
+  @Column({ name: 'is_active' })
+  is_active: boolean;
 
-  @CreateDateColumn()
-  createdAt!: Date;
+  @Column({ name: 'created_at' })
+  created_at: Date;
 
-  @UpdateDateColumn()
-  updatedAt!: Date;
-
-  // Dynamic columns will be added at runtime based on configuration
-  [key: string]: any;
+  @Column({ name: 'updated_at' })
+  updated_at: Date;
 }
