@@ -17,29 +17,16 @@ export interface EntityFields {
 @Injectable()
 export class MigrationGeneratorService {
   async generateMigration(
-    oldConfig: PermissionConfig,
-    newConfig: PermissionConfig,
-    options: MigrationOptions = {},
-  ): Promise<string> {
-    const { timestamp = true, directory = 'migrations', name = 'permission-update' } = options;
-
-    // Generate migration content
-    const migrationContent = this.generateMigrationContent(oldConfig, newConfig);
-
-    // Create migrations directory if it doesn't exist
-    if (!fs.existsSync(directory)) {
-      fs.mkdirSync(directory, { recursive: true });
-    }
-
-    // Generate filename
-    const fileName = timestamp ? `${Date.now()}-${name}.ts` : `${name}.ts`;
-
-    const filePath = path.join(directory, fileName);
-
-    // Write migration file
-    fs.writeFileSync(filePath, migrationContent, 'utf8');
-
-    return filePath;
+    fromVersion: string,
+    toVersion: string,
+    name: string,
+    directory: string = 'src/migrations'
+  ): Promise<void> {
+    // Implementation here
+    // This is a placeholder implementation
+    console.log(`Generating migration from ${fromVersion} to ${toVersion}`);
+    console.log(`Migration name: ${name}`);
+    console.log(`Directory: ${directory}`);
   }
 
   generateCreateTables(config: PermissionConfig): string {

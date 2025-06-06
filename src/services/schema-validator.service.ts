@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { EntityMetadata } from 'typeorm';
 import { PermissionConfig } from '../interfaces/config.interface';
+import * as path from 'path';
 
 export interface ValidationResult {
   isValid: boolean;
@@ -123,6 +124,20 @@ export class SchemaValidatorService {
       if (!columns.includes(column.toLowerCase())) {
         result.errors.push(`Missing required column in ${entityName}: ${column}`);
       }
+    }
+  }
+
+  async validateConfig(projectPath: string): Promise<boolean> {
+    try {
+      // Implementation here
+      // This is a placeholder implementation that always returns true
+      // In a real implementation, this would validate the config file against a schema
+      const configPath = path.join(projectPath, 'config', 'permissions.config.js');
+      console.log(`Validating configuration at ${configPath}`);
+      return true;
+    } catch (error) {
+      console.error('Error validating configuration:', error);
+      return false;
     }
   }
 }

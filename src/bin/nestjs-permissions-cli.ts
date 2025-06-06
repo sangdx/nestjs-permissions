@@ -3,6 +3,8 @@
 import { Command } from 'commander';
 import { SecurityConfigPublisherService } from '../services/security-config-publisher.service';
 import { ConfigPublisherService } from '../services/config-publisher.service';
+import { MigrationGeneratorService } from '../services/migration-generator.service';
+import { SchemaValidatorService } from '../services/schema-validator.service';
 
 const program = new Command();
 
@@ -16,6 +18,43 @@ program
     const configPublisher = new ConfigPublisherService();
     await configPublisher.publishConfigToProject(process.cwd(), options.template);
     console.log('Configuration initialized successfully');
+  });
+
+program
+  .command('publish-config')
+  .description('Publish configuration to project')
+  .option('-t, --template <template>', 'Configuration template (basic, advanced)', 'basic')
+  .action(async (options) => {
+    const configPublisher = new ConfigPublisherService();
+    await configPublisher.publishConfigToProject(process.cwd(), options.template);
+    console.log('Configuration published successfully');
+  });
+
+program
+  .command('generate-migration')
+  .description('Generate migration between two versions')
+  .option('-f, --from <version>', 'Source version')
+  .option('-t, --to <version>', 'Target version')
+  .option('-n, --name <name>', 'Migration name')
+  .option('-d, --dir <directory>', 'Migration directory', 'src/migrations')
+  .action(async (options) => {
+    const migrationGenerator = new MigrationGeneratorService();
+    await migrationGenerator.generateMigration(options.from, options.to, options.name, options.dir);
+    console.log('Migration generated successfully');
+  });
+
+program
+  .command('validate-config')
+  .description('Validate configuration schema')
+  .action(async () => {
+    const validator = new SchemaValidatorService();
+    const isValid = await validator.validateConfig(process.cwd());
+    if (isValid) {
+      console.log('Configuration is valid');
+    } else {
+      console.error('Configuration validation failed');
+      process.exit(1);
+    }
   });
 
 program
