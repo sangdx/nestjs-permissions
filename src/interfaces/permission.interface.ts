@@ -1,10 +1,11 @@
 export interface Permission {
-  id: string;
+  id: number;
   name: string;
-  description?: string;
-  isActive: boolean;
-  createdAt: Date;
-  updatedAt: Date;
+  description: string;
+  level: number;
+  is_active: boolean;
+  created_at: Date;
+  updated_at: Date;
 }
 
 export interface PermissionOptions {
@@ -16,10 +17,9 @@ export interface PermissionOptions {
 export interface PermissionFieldConfig {
   id: string;
   name: string;
-  description?: string;
-  level?: string;
-  isActive?: string;
-  createdAt?: string;
-  updatedAt?: string;
-  [customField: string]: string | undefined;
+  description: string;
+  level: string;
+  is_active: string;
+  created_at: string;
+  updated_at: string;
 }

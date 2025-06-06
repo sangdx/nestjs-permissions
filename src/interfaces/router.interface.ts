@@ -1,23 +1,21 @@
 export interface RouterPermission {
-  id: string | number;
+  id: number;
   route: string;
   method: string;
-  permissionId: string | number;
-  isActive: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-  [key: string]: any; // Support for custom fields
+  permission_id: number;
+  is_active: boolean;
+  created_at: Date;
+  updated_at: Date;
 }
 
 export interface RouterPermissionFieldConfig {
   id: string;
   route: string;
   method: string;
-  permissionId: string;
-  isActive: string;
-  createdAt: string;
-  updatedAt: string;
-  [customField: string]: string | undefined;
+  permission_id: string;
+  is_active: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'OPTIONS' | 'HEAD' | '*';

@@ -5,6 +5,7 @@ import { Repository } from 'typeorm';
 import { PermissionEntity } from '../models/permission.entity';
 import { RoleHierarchyException } from '../exceptions/role-hierarchy.exception';
 import 'reflect-metadata';
+import { ConfigService } from './config.service';
 
 export interface RoleNode {
   role: string;
@@ -28,6 +29,7 @@ export class RoleHierarchyService {
   constructor(
     @InjectRepository(PermissionEntity)
     private readonly permissionRepository: Repository<PermissionEntity>,
+    private readonly configService: ConfigService,
   ) {}
 
   async buildRoleTree(hierarchy: RoleHierarchy): Promise<RoleNode> {
@@ -229,5 +231,38 @@ export class RoleHierarchyService {
   clearCache(): void {
     this.rolePermissions.clear();
     this.roleTree = null;
+  }
+
+  async getPermissionsByRole(role: string): Promise<PermissionEntity[]> {
+    return this.permissionRepository
+      .createQueryBuilder('p')
+      .where('p.name = :role AND p.is_active = :isActive', { role, isActive: true })
+      .getMany();
+  }
+
+  async getRoleHierarchy(role: string): Promise<PermissionEntity[]> {
+    const permissions = await this.permissionRepository
+      .createQueryBuilder('p')
+      .where('p.name = :role AND p.is_active = :isActive', { role, isActive: true })
+      .getMany();
+
+    return permissions;
+  }
+
+  async validateRoleHierarchy(role: string): Promise<boolean> {
+    const permissions = await this.getPermissionsByRole(role);
+    return permissions.length > 0;
+  }
+
+  private mapPermissionEntity(permission: PermissionEntity): PermissionEntity {
+    return {
+      id: permission.id,
+      name: permission.name,
+      description: permission.description,
+      level: permission.level,
+      is_active: permission.is_active,
+      created_at: permission.created_at,
+      updated_at: permission.updated_at,
+    };
   }
 }

@@ -1,19 +1,17 @@
 export interface UserPermission {
-  id: string | number;
-  userId: string | number;
-  permissionId: string | number;
-  grantedAt: Date;
-  expiresAt?: Date;
-  isActive: boolean;
-  [key: string]: any; // Support for custom fields
+  id: number;
+  user_id: string;
+  permission_id: number;
+  granted_at: Date;
+  expires_at?: Date;
+  is_active: boolean;
 }
 
 export interface UserPermissionFieldConfig {
   id: string;
-  userId: string;
-  permissionId: string;
-  grantedAt: string;
-  expiresAt?: string;
-  isActive: string;
-  [customField: string]: string | undefined;
+  user_id: string;
+  permission_id: string;
+  granted_at: string;
+  expires_at: string;
+  is_active: string;
 }
