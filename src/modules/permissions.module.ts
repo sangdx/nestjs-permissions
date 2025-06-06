@@ -1,4 +1,4 @@
-import { DynamicModule, Module } from '@nestjs/common';
+import { DynamicModule, Module, Type } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from './config.module';
 import { SecurityModule } from './security.module';
@@ -25,19 +25,21 @@ export class PermissionsModule {
     config?: Partial<PermissionConfig>,
     securityConfig?: Partial<SecurityConfig>,
   ): DynamicModule {
+    const imports: Array<Type<any> | DynamicModule | Promise<DynamicModule>> = [
+      ConfigModule.register(config),
+      TypeOrmModule.forFeature([
+        PermissionEntity,
+        UserPermissionEntity,
+        RouterPermissionEntity,
+        AuditLogEntity,
+      ]),
+      SecurityModule,
+      ErrorHandlingModule,
+    ];
+
     return {
       module: PermissionsModule,
-      imports: [
-        ConfigModule.register(config),
-        TypeOrmModule.forFeature([
-          PermissionEntity,
-          UserPermissionEntity,
-          RouterPermissionEntity,
-          AuditLogEntity,
-        ]),
-        SecurityModule,
-        ErrorHandlingModule,
-      ],
+      imports,
       providers: [
         ConfigService,
         PermissionService,

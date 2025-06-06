@@ -1,5 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { PermissionConfig } from '../interfaces/config.interface';
+import * as fs from 'fs';
+import * as path from 'path';
+import { MigrationException } from '../exceptions/migration.exception';
 
 export interface MigrationOptions {
   timestamp?: boolean;
@@ -20,11 +23,53 @@ export class MigrationGeneratorService {
     name: string,
     directory = 'src/migrations',
   ): Promise<void> {
-    // Implementation here
-    // This is a placeholder implementation
-    console.log(`Generating migration from ${fromVersion} to ${toVersion}`);
-    console.log(`Migration name: ${name}`);
-    console.log(`Directory: ${directory}`);
+    try {
+      // Create migrations directory if it doesn't exist
+      if (!fs.existsSync(directory)) {
+        fs.mkdirSync(directory, { recursive: true });
+      }
+
+      // Load configurations for both versions
+      const oldConfig = await this.loadConfig(fromVersion);
+      const newConfig = await this.loadConfig(toVersion);
+
+      // Generate migration content
+      const migrationContent = this.generateMigrationContent(oldConfig, newConfig, name);
+
+      // Generate filename with timestamp
+      const timestamp = new Date().getTime();
+      const className = this.generateClassName(name);
+      const filename = `${timestamp}-${name}.ts`;
+      const filePath = path.join(directory, filename);
+
+      // Write migration file
+      fs.writeFileSync(filePath, migrationContent, 'utf8');
+
+      console.log(`Migration generated successfully at: ${filePath}`);
+    } catch (error) {
+      throw new MigrationException('MIGRATION_FAILED', error.message);
+    }
+  }
+
+  private async loadConfig(version: string): Promise<PermissionConfig> {
+    try {
+      // Try to load config from version file
+      const configPath = path.join(process.cwd(), 'config', `permissions.${version}.config.js`);
+      if (fs.existsSync(configPath)) {
+        return require(configPath);
+      }
+      throw new Error(`Configuration file not found for version: ${version}`);
+    } catch (error) {
+      throw new MigrationException('SCHEMA_MISMATCH', `Failed to load config for version ${version}: ${error.message}`);
+    }
+  }
+
+  private generateClassName(name: string): string {
+    // Convert name to PascalCase
+    return name
+      .split(/[-_]/)
+      .map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+      .join('');
   }
 
   generateCreateTables(config: PermissionConfig): string {
@@ -106,13 +151,14 @@ export class MigrationGeneratorService {
   private generateMigrationContent(
     oldConfig: PermissionConfig,
     newConfig: PermissionConfig,
+    name: string
   ): string {
     const alterations = this.generateAlterTables(oldConfig, newConfig);
     const indexes = this.generateIndexes(newConfig);
 
     return `import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class ${this.generateClassName()} implements MigrationInterface {
+export class ${this.generateClassName(name)} implements MigrationInterface {
   name = '${Date.now()}';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
@@ -125,10 +171,6 @@ export class ${this.generateClassName()} implements MigrationInterface {
     ${this.generateDownMigration(oldConfig, alterations, indexes)}
   }
 }`;
-  }
-
-  private generateClassName(): string {
-    return `PermissionUpdate${Date.now()}`;
   }
 
   private generateTableCreation(tableName: string, fields: Record<string, string>): string {
