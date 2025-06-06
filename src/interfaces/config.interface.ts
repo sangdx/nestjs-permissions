@@ -1,22 +1,18 @@
-import { PermissionFieldConfig } from './permission.interface';
-import { RouterPermissionFieldConfig } from './router.interface';
-import { UserPermissionFieldConfig } from './user.interface';
+import { SecurityConfig } from './security.interface';
+
+export interface EntityConfig {
+  tableName: string;
+  fields: {
+    [key: string]: string | undefined;
+  };
+}
 
 export interface DatabaseConfig {
   type: 'mysql' | 'postgres' | 'sqlite' | 'mongodb';
   entities: {
-    permissions: {
-      tableName: string;
-      fields: PermissionFieldConfig;
-    };
-    routerPermissions: {
-      tableName: string;
-      fields: RouterPermissionFieldConfig;
-    };
-    userPermissions: {
-      tableName: string;
-      fields: UserPermissionFieldConfig;
-    };
+    permissions: EntityConfig;
+    routerPermissions: EntityConfig;
+    userPermissions: EntityConfig;
   };
 }
 
@@ -25,12 +21,6 @@ export interface PermissionsConfig {
   adminRole: string;
   publicRoutes: string[];
   permissionStrategy: 'whitelist' | 'blacklist';
-}
-
-export interface SecurityConfig {
-  enableCaching: boolean;
-  cacheTimeout: number;
-  enableAuditLog: boolean;
 }
 
 export interface PermissionConfig {
