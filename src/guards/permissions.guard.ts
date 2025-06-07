@@ -17,7 +17,7 @@ export class PermissionsGuard implements CanActivate {
     @InjectRepository(RouterPermissionEntity)
     private readonly routerPermissionRepository: Repository<RouterPermissionEntity>,
     @InjectRepository(UserPermissionEntity)
-    private readonly userPermissionRepository: Repository<UserPermissionEntity>
+    private readonly userPermissionRepository: Repository<UserPermissionEntity>,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -67,16 +67,21 @@ export class PermissionsGuard implements CanActivate {
 
     // Check if user has all required permissions
     const hasPermissions = routerPermissions.every((rp) =>
-      userPermissions.some((up) => up.permission_id === rp.permission_id)
+      userPermissions.some((up) => up.permission_id === rp.permission_id),
     );
 
     // Log the permission check if audit service is available
     if (this.permissionService['auditService']) {
-      await this.permissionService['auditService'].logPermissionCheck(user.id, route, hasPermissions, {
-        method,
-        requiredPermissions: routerPermissions.map(rp => rp.permission_id),
-        userPermissions: userPermissions.map(up => up.permission_id)
-      });
+      await this.permissionService['auditService'].logPermissionCheck(
+        user.id,
+        route,
+        hasPermissions,
+        {
+          method,
+          requiredPermissions: routerPermissions.map((rp) => rp.permission_id),
+          userPermissions: userPermissions.map((up) => up.permission_id),
+        },
+      );
     }
 
     return hasPermissions;

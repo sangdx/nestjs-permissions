@@ -96,14 +96,14 @@ export class PermissionService {
       .getMany();
 
     const hasPermissions = routerPermissions.every((rp) =>
-      userPermissions.some((up) => up.permission_id === rp.permission_id)
+      userPermissions.some((up) => up.permission_id === rp.permission_id),
     );
 
     if (this.auditService) {
       await this.auditService.logPermissionCheck(userId, route, hasPermissions, {
         method,
-        requiredPermissions: routerPermissions.map(rp => rp.permission_id),
-        userPermissions: userPermissions.map(up => up.permission_id)
+        requiredPermissions: routerPermissions.map((rp) => rp.permission_id),
+        userPermissions: userPermissions.map((up) => up.permission_id),
       });
     }
 

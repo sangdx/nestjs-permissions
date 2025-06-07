@@ -1,6 +1,6 @@
 {
   "name": "@brandazm/dynamic-permissions",
-  "version": "1.0.20",
+  "version": "1.0.21",
   "description": "A flexible and powerful permissions management system for NestJS applications with built-in security features",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
