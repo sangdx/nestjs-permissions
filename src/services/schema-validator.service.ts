@@ -181,81 +181,10 @@ export class SchemaValidatorService {
     try {
       const configFileContent = fs.readFileSync(configPath, 'utf8');
       const [, fileContent] = configFileContent.split('=');
-      try {
-        return JSON.parse(fileContent);
-      } catch {
-        const configModule = await this.evaluateConfig(fileContent);
-        if (!configModule) {
-          throw new Error('Could not evaluate configuration file');
-        }
-        return configModule;
-      }
+      return JSON.parse(fileContent);
     } catch (error) {
       console.error('Error loading configuration file:', error);
       return null;
-    }
-  }
-
-  private async evaluateConfig(content: string): Promise<any> {
-    try {
-      // Remove any import statements and type annotations
-      const cleanContent = content
-        .replace(/import\s+.*?from\s+['"].*?['"]\s*;?\n?/g, '')
-        .replace(/:\s*\w+(?:<[^>]+>)?/g, '')
-        .trim();
-
-      // Try different export patterns
-      const patterns = [
-        // export const config = { ... }
-        /export\s+(?:const|let|var)\s+(\w+)\s*=\s*({[\s\S]*?});/,
-        // export default { ... }
-        /export\s+default\s+({[\s\S]*?});/,
-        // module.exports = { ... }
-        /module\.exports\s*=\s*({[\s\S]*?});/,
-        // const config = { ... }; export default config
-        /const\s+(\w+)\s*=\s*({[\s\S]*?});[\s\S]*?export\s+default\s+\1\s*;/,
-      ];
-
-      for (const pattern of patterns) {
-        const match = cleanContent.match(pattern);
-        if (match && (match[1] || match[2])) {
-          const configObject = match[2] || match[1];
-          return this.safeEval(configObject);
-        }
-      }
-
-      throw new Error('Could not find configuration object in file');
-    } catch (error) {
-      console.error('Error evaluating configuration:', error);
-      throw error;
-    }
-  }
-
-  private safeEval(configStr: string): any {
-    try {
-      // First try to parse as JSON with some preprocessing
-      const jsonStr = configStr
-        .replace(/(['"])?([a-zA-Z0-9_]+)(['"])?:/g, '"$2":') // Ensure property names are quoted
-        .replace(/'/g, '"') // Replace single quotes with double quotes
-        .replace(/,(\s*[}\]])/g, '$1'); // Remove trailing commas
-
-      try {
-        return JSON.parse(jsonStr);
-      } catch (jsonError) {
-        // If JSON parsing fails, try Function constructor with a safer approach
-        const fn = Function(`
-          "use strict";
-          const windowMs = 900000;
-          const enabled = true;
-          const max = 100;
-          const config = ${configStr};
-          return config;
-        `);
-        return fn();
-      }
-    } catch (error) {
-      console.error('Error evaluating configuration:', error);
-      throw error;
     }
   }
 

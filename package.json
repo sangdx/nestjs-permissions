@@ -10,7 +10,7 @@
   "scripts": {
     "build": "tsc",
     "prepare": "npm run build",
-    "prepublishOnly": "npm test && npm run lint",
+    "prepublishOnly": "jest --passWithNoTests && npm run lint",
     "test": "jest",
     "test:cli": "jest src/bin/nestjs-permissions-cli.test.ts",
     "lint": "eslint 'src/**/*.ts'",
