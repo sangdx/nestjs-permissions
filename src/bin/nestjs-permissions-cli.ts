@@ -5,8 +5,8 @@ import { SecurityConfigPublisherService } from '../services/security-config-publ
 import { ConfigPublisherService } from '../services/config-publisher.service';
 import { MigrationGeneratorService } from '../services/migration-generator.service';
 import { SchemaValidatorService } from '../services/schema-validator.service';
-import path from 'path';
-import fs from 'fs';
+import * as path from 'path';
+import * as fs from 'fs';
 
 const program = new Command();
 
