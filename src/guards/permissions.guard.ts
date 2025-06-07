@@ -4,7 +4,6 @@ import { PermissionService } from '../services/permission.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { RouterPermissionEntity } from '../models/router-permission.entity';
-import { PermissionEntity } from '../models/permission.entity';
 import { ConfigService } from '../services/config.service';
 import { UserPermissionEntity } from '../models/user-permission.entity';
 

@@ -6,9 +6,7 @@ import { Repository } from 'typeorm';
 import { PermissionEntity } from '../models/permission.entity';
 import { UserPermissionEntity } from '../models/user-permission.entity';
 import { RouterPermissionEntity } from '../models/router-permission.entity';
-import { DynamicQueryBuilder } from '../utils/query-builder.util';
 import 'reflect-metadata';
-import { RouterPermissionFieldConfig } from '../interfaces/router.interface';
 import { AuditService } from './audit.service';
 
 interface CacheEntry {
