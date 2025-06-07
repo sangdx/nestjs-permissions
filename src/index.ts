@@ -45,3 +45,12 @@ export {
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
+
+// Add this to your module configuration
+import { APP_GUARD } from '@nestjs/core';
+import { PermissionsGuard } from './guards/permissions.guard';
+
+export const PermissionGuardProvider = {
+  provide: APP_GUARD,
+  useClass: PermissionsGuard,
+};

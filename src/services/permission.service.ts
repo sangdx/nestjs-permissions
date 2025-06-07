@@ -9,6 +9,7 @@ import { RouterPermissionEntity } from '../models/router-permission.entity';
 import { DynamicQueryBuilder } from '../utils/query-builder.util';
 import 'reflect-metadata';
 import { RouterPermissionFieldConfig } from '../interfaces/router.interface';
+import { AuditService } from './audit.service';
 
 interface CacheEntry {
   permissions: Permission[];
@@ -32,6 +33,7 @@ export class PermissionService {
     private readonly userPermissionRepository: Repository<UserPermissionEntity>,
     @InjectRepository(RouterPermissionEntity)
     private readonly routerPermissionRepository: Repository<RouterPermissionEntity>,
+    private readonly auditService: AuditService,
   ) {}
 
   async getUserPermissions(userId: string): Promise<Permission[]> {
@@ -72,37 +74,38 @@ export class PermissionService {
       return true;
     }
 
-    const routerPermissionQuery = this.routerPermissionRepository.createQueryBuilder('rp');
-    DynamicQueryBuilder.buildRouterPermissionQuery(
-      routerPermissionQuery,
-      {
-        id: 'id',
-        route: 'route',
-        method: 'method',
-        permission_id: 'permission_id',
-        is_active: 'is_active',
-        created_at: 'created_at',
-        updated_at: 'updated_at',
-      } as RouterPermissionFieldConfig,
-      'rp',
-    );
-
-    routerPermissionQuery
+    const routerPermissions = await this.routerPermissionRepository
+      .createQueryBuilder('rp')
+      .innerJoin('permissions', 'p', 'p.id = rp.permission_id')
+      .select(['rp.id', 'rp.route', 'rp.method', 'rp.permission_id', 'p.name'])
       .where('rp.route = :route', { route })
       .andWhere('rp.method = :method', { method })
-      .andWhere('rp.is_active = :isActive', { isActive: true });
-
-    const routerPermissions = await routerPermissionQuery.getMany();
+      .andWhere('rp.is_active = :isActive', { isActive: true })
+      .getMany();
 
     if (routerPermissions.length === 0 && config.permissions.permissionStrategy === 'blacklist') {
       return true;
     }
 
-    const userPermissions = await this.getUserPermissions(userId);
+    const userPermissions = await this.userPermissionRepository
+      .createQueryBuilder('up')
+      .innerJoin('permissions', 'p', 'p.id = up.permission_id')
+      .select(['up.id', 'up.user_id', 'up.permission_id', 'p.name'])
+      .where('up.user_id = :userId', { userId })
+      .andWhere('up.is_active = :isActive', { isActive: true })
+      .getMany();
 
     const hasPermissions = routerPermissions.every((rp) =>
-      userPermissions.some((up) => up.id === rp.permission_id),
+      userPermissions.some((up) => up.permission_id === rp.permission_id)
     );
+
+    if (this.auditService) {
+      await this.auditService.logPermissionCheck(userId, route, hasPermissions, {
+        method,
+        requiredPermissions: routerPermissions.map(rp => rp.permission_id),
+        userPermissions: userPermissions.map(up => up.permission_id)
+      });
+    }
 
     return hasPermissions;
   }

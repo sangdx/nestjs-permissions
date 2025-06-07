@@ -18,6 +18,7 @@ import { ConfigPublisherService } from '../services/config-publisher.service';
 import { SecurityConfigPublisherService } from '../services/security-config-publisher.service';
 import { MigrationGeneratorService } from '../services/migration-generator.service';
 import { ErrorHandlingModule } from './error-handling.module';
+import { APP_GUARD } from '@nestjs/core';
 
 @Module({})
 export class PermissionsModule {
@@ -53,6 +54,10 @@ export class PermissionsModule {
         {
           provide: 'SECURITY_CONFIG',
           useValue: securityConfig,
+        },
+        {
+          provide: APP_GUARD,
+          useClass: PermissionsGuard,
         },
       ],
       exports: [
