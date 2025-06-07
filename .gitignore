@@ -4,3 +4,6 @@ dist
 
 **/architecture.md
 **/plan_build.md
+
+coverage
+coverage/**

@@ -35,7 +35,7 @@ program
 program
   .command('generate-migration')
   .description('Generate migration')
-  .option('-n, --name <name>', 'Migration name')
+  .option('-n, --name <n>', 'Migration name')
   .option('-d, --dir <directory>', 'Migration directory', 'src/migrations')
   .action(async (options) => {
     try {
@@ -45,21 +45,11 @@ program
         console.error('Config directory not found. Please run `init` command first.');
         process.exit(1);
       }
-
-      // Validate config file exists
-      const configPath = path.join(configDir, 'permissions.config.ts');
-      if (!fs.existsSync(configPath)) {
-        console.error('permissions.config.ts not found. Please run `init` command first.');
-        process.exit(1);
-      }
-
       // Validate config schema
       const validator = new SchemaValidatorService();
       const isValid = await validator.validateConfig(process.cwd());
       if (!isValid) {
-        console.error(
-          'Configuration validation failed. Please check your permissions.config.ts file.',
-        );
+        console.error('Configuration validation failed. Please check your configuration file.');
         process.exit(1);
       }
 

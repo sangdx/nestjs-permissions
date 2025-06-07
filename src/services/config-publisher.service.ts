@@ -195,13 +195,10 @@ export class ConfigPublisherService {
   }
 
   private generateConfigFile(config: Partial<PermissionConfig>): string {
-    return `
-      import { PermissionConfig } from '@brandazm/dynamic-permissions';
-
-      const config: PermissionConfig = ${JSON.stringify(config, null, 2)};
-
-      export default config;
-      `;
+    const configStr = JSON.stringify(config, null, 2)
+      .replace(/"([^"]+)":/g, '$1:')
+      .replace(/"/g, "'");
+    return `export const config = ${configStr}`;
   }
 
   private writeConfigToFile(config: PermissionConfig, filePath: string): void {

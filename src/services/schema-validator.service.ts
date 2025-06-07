@@ -130,16 +130,14 @@ export class SchemaValidatorService {
 
   async validateConfig(projectPath: string): Promise<boolean> {
     try {
-      const configPath = path.join(projectPath, 'config', 'permissions.config.ts');
-
+      const tsConfigPath = path.join(projectPath, 'config', 'permissions.config.ts');
       // Check if config file exists
-      if (!fs.existsSync(configPath)) {
-        console.error('Configuration file not found:', configPath);
+      if (!fs.existsSync(tsConfigPath)) {
+        console.error('Configuration file not found. Expected:', tsConfigPath);
         return false;
       }
-
       // Read and validate the configuration file
-      const config = await this.loadConfig(configPath);
+      const config = await this.loadConfig(tsConfigPath);
       if (!config) {
         return false;
       }
@@ -181,16 +179,16 @@ export class SchemaValidatorService {
 
   private async loadConfig(configPath: string): Promise<PermissionConfig | null> {
     try {
-      // First try to read the file content
-      const fileContent = fs.readFileSync(configPath, 'utf8');
-
-      // Try to parse as JSON first
+      const configFileContent = fs.readFileSync(configPath, 'utf8');
+      const [, fileContent] = configFileContent.split('=');
       try {
         return JSON.parse(fileContent);
       } catch {
-        // If not JSON, evaluate as JavaScript
         const configModule = await this.evaluateConfig(fileContent);
-        return configModule.default || configModule;
+        if (!configModule) {
+          throw new Error('Could not evaluate configuration file');
+        }
+        return configModule;
       }
     } catch (error) {
       console.error('Error loading configuration file:', error);
@@ -200,14 +198,61 @@ export class SchemaValidatorService {
 
   private async evaluateConfig(content: string): Promise<any> {
     try {
-      // Remove any import/export statements
+      // Remove any import statements and type annotations
       const cleanContent = content
-        .replace(/import\s+.*?from\s+['"].*?['"]/g, '')
-        .replace(/export\s+default\s+/, 'return ');
+        .replace(/import\s+.*?from\s+['"].*?['"]\s*;?\n?/g, '')
+        .replace(/:\s*\w+(?:<[^>]+>)?/g, '')
+        .trim();
 
-      // Create a function from the content
-      const fn = new Function(cleanContent);
-      return fn();
+      // Try different export patterns
+      const patterns = [
+        // export const config = { ... }
+        /export\s+(?:const|let|var)\s+(\w+)\s*=\s*({[\s\S]*?});/,
+        // export default { ... }
+        /export\s+default\s+({[\s\S]*?});/,
+        // module.exports = { ... }
+        /module\.exports\s*=\s*({[\s\S]*?});/,
+        // const config = { ... }; export default config
+        /const\s+(\w+)\s*=\s*({[\s\S]*?});[\s\S]*?export\s+default\s+\1\s*;/,
+      ];
+
+      for (const pattern of patterns) {
+        const match = cleanContent.match(pattern);
+        if (match && (match[1] || match[2])) {
+          const configObject = match[2] || match[1];
+          return this.safeEval(configObject);
+        }
+      }
+
+      throw new Error('Could not find configuration object in file');
+    } catch (error) {
+      console.error('Error evaluating configuration:', error);
+      throw error;
+    }
+  }
+
+  private safeEval(configStr: string): any {
+    try {
+      // First try to parse as JSON with some preprocessing
+      const jsonStr = configStr
+        .replace(/(['"])?([a-zA-Z0-9_]+)(['"])?:/g, '"$2":') // Ensure property names are quoted
+        .replace(/'/g, '"') // Replace single quotes with double quotes
+        .replace(/,(\s*[}\]])/g, '$1'); // Remove trailing commas
+
+      try {
+        return JSON.parse(jsonStr);
+      } catch (jsonError) {
+        // If JSON parsing fails, try Function constructor with a safer approach
+        const fn = Function(`
+          "use strict";
+          const windowMs = 900000;
+          const enabled = true;
+          const max = 100;
+          const config = ${configStr};
+          return config;
+        `);
+        return fn();
+      }
     } catch (error) {
       console.error('Error evaluating configuration:', error);
       throw error;
@@ -216,7 +261,6 @@ export class SchemaValidatorService {
 
   private validateTopLevelConfig(config: any): boolean {
     const requiredProperties = ['database', 'permissions', 'security'];
-
     for (const prop of requiredProperties) {
       if (!config[prop]) {
         console.error(`Missing required top-level property: ${prop}`);

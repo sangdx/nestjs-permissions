@@ -195,11 +195,7 @@ export class SecurityConfigPublisherService {
       enableAuditLog: config.enableAuditLog ?? true,
     };
 
-    return `import { SecurityConfig } from '@brandazm/dynamic-permissions';\n\nexport const securityConfig: SecurityConfig = ${JSON.stringify(
-      fullConfig,
-      null,
-      2,
-    )};\n`;
+    return `export const securityConfig = ${JSON.stringify(fullConfig, null, 2)};\n`;
   }
 
   private parseConfigFile(content: string): SecurityConfig {

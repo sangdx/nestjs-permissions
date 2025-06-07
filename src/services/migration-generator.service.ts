@@ -18,51 +18,59 @@ export interface EntityFields {
 export class MigrationGeneratorService {
   async generateMigration(name: string, directory = 'src/migrations'): Promise<void> {
     try {
+      console.log('Creating migration directory:', directory);
       // Create migrations directory if it doesn't exist
       if (!fs.existsSync(directory)) {
         fs.mkdirSync(directory, { recursive: true });
       }
 
+      console.log('Loading configuration...');
       // Load configuration
       const config = await this.loadConfig();
+      console.log('Configuration loaded successfully');
 
+      console.log('Generating migration content...');
       // Generate migration content
       const migrationContent = this.generateMigrationContent(config, name);
+      console.log('Migration content generated successfully');
 
       // Generate filename with timestamp
       const timestamp = new Date().getTime();
       const className = this.generateClassName(name);
       const filename = `${timestamp}-${className}.ts`;
       const filePath = path.join(directory, filename);
+      console.log('Writing migration file to:', filePath);
 
       // Write migration file
       fs.writeFileSync(filePath, migrationContent, 'utf8');
 
       console.log(`Migration generated successfully at: ${filePath}`);
     } catch (error) {
+      console.error('Error generating migration:', error);
       throw new MigrationException('MIGRATION_FAILED', error.message);
     }
   }
 
   private async loadConfig(): Promise<PermissionConfig> {
+    const tsConfigPath = path.join(process.cwd(), 'config', 'permissions.config.ts');
     try {
-      // Load config from permissions.config.ts
-      const configPath = path.join(process.cwd(), 'config', 'permissions.config.ts');
-      if (fs.existsSync(configPath)) {
-        return require(configPath);
-      }
-      throw new Error('Configuration file not found: permissions.config.ts');
+      const configFileContent = fs.readFileSync(tsConfigPath, 'utf8');
+      const [, fileContent] = configFileContent.split('=');
+      return JSON.parse(fileContent);
     } catch (error) {
+      console.error('Error loading configuration file:', error);
       throw new MigrationException('CONFIG_LOAD_ERROR', `Failed to load config: ${error.message}`);
     }
   }
 
   private generateClassName(name: string): string {
     // Convert name to PascalCase
-    return name
-      .split(/[-_]/)
-      .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
-      .join('');
+    return (
+      name
+        .split(/[-_]/)
+        .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+        .join('') + `_${Date.now()}`
+    );
   }
 
   private generateMigrationContent(config: PermissionConfig, name: string): string {
@@ -76,9 +84,9 @@ export class ${this.generateClassName(name)} implements MigrationInterface {
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     ${createTables
-      .split('\n')
-      .map((line) => `await queryRunner.query(\`${line}\`);`)
-      .join('\n    ')}
+      .split('\n\n')
+      .map((table) => `await queryRunner.query(\`\n${table}\n    \`);`)
+      .join('\n\n    ')}
 
     ${indexes.map((index) => `await queryRunner.query(\`${index}\`);`).join('\n    ')}
   }
@@ -93,7 +101,6 @@ export class ${this.generateClassName(name)} implements MigrationInterface {
   }
 
   generateCreateTables(config: PermissionConfig): string {
-    const lines: string[] = [];
     const { database } = config;
 
     // Convert config fields to required string fields
@@ -117,22 +124,16 @@ export class ${this.generateClassName(name)} implements MigrationInterface {
     });
 
     // Generate tables with converted fields
-    lines.push(
+    const tables = [
       this.generateTableCreation(database.entities.permissions.tableName, permissionFields),
-    );
-
-    lines.push(
       this.generateTableCreation(
         database.entities.routerPermissions.tableName,
         routerPermissionFields,
       ),
-    );
-
-    lines.push(
       this.generateTableCreation(database.entities.userPermissions.tableName, userPermissionFields),
-    );
+    ];
 
-    return lines.join('\n\n');
+    return tables.join('\n\n');
   }
 
   generateAlterTables(oldConfig: PermissionConfig, newConfig: PermissionConfig): string[] {
@@ -172,18 +173,33 @@ export class ${this.generateClassName(name)} implements MigrationInterface {
     const columns = Object.entries(fields)
       .map(([key, value]) => {
         let type = 'varchar';
-        if (key === 'id') type = 'uuid';
-        if (key.includes('At')) type = 'timestamp';
-        if (key === 'isActive') type = 'boolean';
-        if (key === 'level') type = 'integer';
+        let constraints = '';
 
-        return `"${value}" ${type}`;
+        // Determine type and constraints based on field key
+        if (key === 'id') {
+          type = 'uuid';
+          constraints = 'PRIMARY KEY DEFAULT gen_random_uuid()';
+        } else if (key.includes('At')) {
+          type = 'timestamp';
+          constraints = 'NOT NULL DEFAULT CURRENT_TIMESTAMP';
+        } else if (key === 'isActive' || key.includes('is_active')) {
+          type = 'boolean';
+          constraints = 'NOT NULL DEFAULT true';
+        } else if (key === 'level') {
+          type = 'integer';
+          constraints = 'NOT NULL DEFAULT 0';
+        } else if (key === 'name') {
+          type = 'varchar';
+          constraints = 'NOT NULL';
+        } else {
+          type = 'varchar';
+        }
+
+        return `        "${value}" ${type}${constraints ? ' ' + constraints : ''}`;
       })
-      .join(',\n    ');
+      .join(',\n');
 
-    return `CREATE TABLE "${tableName}" (
-    ${columns}
-);`;
+    return `CREATE TABLE "${tableName}" (\n${columns}\n    )`;
   }
 
   private compareAndGenerateAlterations(
