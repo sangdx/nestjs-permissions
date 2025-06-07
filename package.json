@@ -12,7 +12,6 @@
     "prepare": "npm run build",
     "prepublishOnly": "jest --passWithNoTests && npm run lint",
     "test": "jest",
-    "test:cli": "jest src/bin/nestjs-permissions-cli.test.ts",
     "lint": "eslint 'src/**/*.ts'",
     "format": "prettier --write 'src/**/*.ts'",
     "version": "npm run format && git add -A src",
