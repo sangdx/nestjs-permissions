@@ -195,8 +195,7 @@ export class ConfigPublisherService {
   }
 
   private generateConfigFile(config: Partial<PermissionConfig>): string {
-    const configStr = JSON.stringify(config, null, 2)
-      .replace(/"([^"]+)":/g, '$1:');
+    const configStr = JSON.stringify(config, null, 2).replace(/"([^"]+)":/g, '$1:');
     return `export const config = ${configStr}`;
   }
 
